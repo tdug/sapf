@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8DD76FB00486AB0100D96B5E /* taggeddoubles.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6A0FF2C0290799A04C91782 /* taggeddoubles.1 */; };
 		920F92F614B058B800A03FFE /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 920F92F514B058B800A03FFE /* Carbon.framework */; };
 		9219F9E1201B901300270C1E /* MantaMulti.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9219F9DA201B901200270C1E /* MantaMulti.cpp */; };
 		9219F9E2201B901300270C1E /* Manta.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9219F9DB201B901200270C1E /* Manta.cpp */; };
@@ -58,7 +57,6 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				8DD76FB00486AB0100D96B5E /* taggeddoubles.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -145,7 +143,6 @@
 		92E3A53D13C168D800FF2592 /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = /System/Library/Frameworks/AudioUnit.framework; sourceTree = "<absolute>"; };
 		92E3F1BA15E610E8004EB5C8 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = ../../../../../System/Library/Frameworks/Cocoa.framework; sourceTree = "<group>"; };
 		92F25DB913B63CAA007AED32 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = ../../../../../System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<group>"; };
-		C6A0FF2C0290799A04C91782 /* taggeddoubles.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = taggeddoubles.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -315,7 +312,6 @@
 		C6A0FF2B0290797F04C91782 /* Documentation */ = {
 			isa = PBXGroup;
 			children = (
-				C6A0FF2C0290799A04C91782 /* taggeddoubles.1 */,
 			);
 			name = Documentation;
 			sourceTree = "<group>";
@@ -441,7 +437,7 @@
 				GCC_VERSION = "";
 				INSTALL_PATH = /usr/local/bin;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				ONLY_ACTIVE_ARCH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = sapf;
 				SDKROOT = macosx;
 				VALID_ARCHS = "x86_64 x86_64h arm64 arm64e";
