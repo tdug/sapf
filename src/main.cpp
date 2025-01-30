@@ -55,6 +55,8 @@ Manta* manta()
 
 /* issue:
 
+[These comments are very old and I have not checked if they are still relevant.]
+
 TableData alloc should use new
 
 bugs:
@@ -92,7 +94,7 @@ extern void AddSetOps();
 extern void AddRandomOps();
 extern void AddMidiOps();
 
-const char* gVersionString = "0.020";
+const char* gVersionString = "0.1.21";
 
 static void usage()
 {

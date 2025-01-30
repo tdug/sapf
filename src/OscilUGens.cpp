@@ -185,7 +185,7 @@ P<List> gSawtoothTable;
 
 static void makeClassicWavetables()
 {
-	fprintf(stdout, "computing wave tables\n");
+	//fprintf(stdout, "computing wave tables\n");
 	Z amps[kMaxHarmonics+1];
 	Z phases[kMaxHarmonics+1];
 	Z smooth = 0.;
@@ -228,7 +228,7 @@ static void makeClassicWavetables()
 	vm.def("sqrTbl", gSquareTable);			vm.addBifHelp("sqrTbl - square wave table.");
 	vm.def("sawTbl", gSawtoothTable);		vm.addBifHelp("sawTbl - sawtooth wave table.");
 
-	fprintf(stdout, "done computing wave tables\n");
+	//fprintf(stdout, "done computing wave tables\n");
 }
 
 

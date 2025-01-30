@@ -177,14 +177,6 @@ VM::VM()
 #endif
 {
 	initElapsedTime();
- 
-    {
-        P<String> a = getsym("a");
-        P<String> a2 = getsym("a");
-        printf("aa %p %p\n", a(), a2());
-        assert(a() == a2());
-    }
-        
 	
 	_ee = new Form(0, NULL);
 		
