@@ -67,7 +67,11 @@ is very natural. You string along several words and get a new value.
 QUICK SET-UP
 
 Put the sapf program into ~/bin or wherever you keep commands.
-Set up the environment variables. 
+Since this binary is unsigned you will need to remove Apple's quarantine attribute:
+
+xattr -r -d com.apple.quarantine <path-to-sapf-binary>
+
+Set up the environment variables in Terminal or your shell profile. 
 For example:
 
 export SAPF_HISTORY="$HOME/sapf-files/sapf-history.txt"
