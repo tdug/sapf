@@ -47,12 +47,14 @@ syntax possible.
 There are several reasons I like the concatenative style of programming:
     Function composition is concatenation. 
     Pipelining values through functions to get new values is the most natural
-	    idiom.
+        idiom.
     Functions are applied from left to right instead of inside out. 
     Support for multiple return values comes for free. 
     No need for operator precedence. 
-    No delimiters used in other languages such as parentheses, commas or
-    semicolons are needed.
+    Fewer delimiters are required: 
+        Parentheses are not needed to control operator precedence.
+        Semicolons are not needed to separate statements.
+        Commas are not needed to separate arguments.
 
 (Note: Sapf is inspired by, but is not purely a concatenative language because it has lexical variables.)
 
@@ -60,6 +62,29 @@ When I am programming interactively, I most often find myself in the situation
 where I have a value and I want to transform it to something else. The thing to
 do is apply a function with some parameters. With concatenative programming this
 is very natural. You string along several words and get a new value.
+
+
+QUICK SET-UP
+
+Put the sapf program into ~/bin or wherever you keep commands.
+Set up the environment variables. 
+For example:
+
+export SAPF_HISTORY="$HOME/sapf-files/sapf-history.txt"
+export SAPF_LOG="$HOME/sapf-files/sapf-log.txt"
+export SAPF_PRELUDE="$HOME/sapf-files/sapf-prelude.txt"
+export SAPF_EXAMPLES="$HOME/sapf-files/sapf-examples.txt"
+export SAPF_README="$HOME/sapf-files/README.txt"
+export SAPF_RECORDINGS="$HOME/sapf-files/recordings"
+export SAPF_SPECTROGRAMS="$HOME/sapf-files/spectrograms"
+
+read this README. 
+
+check out some examples:
+    start sapf in Terminal.
+    open sapf-examples.txt in a text editor
+    copy an example onto the command line.
+
 
 COMMAND LINE
 
@@ -80,40 +105,40 @@ OPTIONS
     -h
         print help for the command line options.
 
-ENVIRONMENT VARIBLES 
+ENVIRONMENT VARIABLES 
     
     SAPF_PRELUDE 
         the path for a code file to be loaded before entering the
-        read-eval-print loop. This contains many useful definitions.
+        read-eval-print loop.
         
     SAPF_RECORDINGS
         the path where output sound files should be written.
-		
-	SAPF_SPECTROGRAMS
-		the path where spectrogram images should be written.
+        
+    SAPF_SPECTROGRAMS
+        the path where spectrogram images should be written.
         
     SAPF_HISTORY
         the path where the command line history is stored for recall at runtime.
         
     SAPF_LOG
         the path where a log of command line inputs are stored for posterity.
-		
-	SAPF_EXAMPLES
-		the path to a file of examples. 
+        
+    SAPF_EXAMPLES
+        the path to a file of examples. 
 
-	SAPF_README
-		the path to this README file.
+    SAPF_README
+        the path to this README file.
 
 
 BUILT IN FUNCTION HELP
     You can get a list of all defined functions by typing
-	    "helpall".
+        "helpall".
     You can get help for a particular built-in function by typing 
-    	"`someword help" (note the backquote).
+        "`someword help" (note the backquote).
 
 A VERY FEW EXAMPLES
 
-	;; type 'stop' to stop sound playback
+    ;; type 'stop' to stop sound playback
 
     ;; play a sine wave at 800 Hz and initial phase of zero.
     800 0 sinosc .3 * play   
@@ -124,30 +149,30 @@ A VERY FEW EXAMPLES
     See the "examples" file for more.
 
 TYPES
-	"It is better to have 100 functions operate on one data structure 
-	than 10 functions on 10 data structures." -- Alan Perlis
+    "It is better to have 100 functions operate on one data structure 
+    than 10 functions on 10 data structures." -- Alan Perlis
 
     The language has a bare minimum of data types:
         Real - a 64 bit double precision floating point number for quantifying
-        	things.
+            things.
         String - a string of characters for naming things.
         List - Ordered lists of values that function as both arrays and lazy
-        	potentially infinitely long sequences.
+            potentially infinitely long sequences.
         Form - An object that maps symbolic names to values. A form is a
-        	dictionary with inheritance.
+            dictionary with inheritance.
         Function - Functions are values that when applied take values from the
-        	stack and evaluate an expression.
+            stack and evaluate an expression.
         Ref - A mutable container for a value. This is the only mutable data
-        	type.
+            type.
         
         
 SYNTAX
-    Expressions are sequences of words (or other syntactic elements) written in
-    postfix form. All words are are executed in left to right order as they are
-    encountered. When a word is executed it looks up the value bound to that
-    word. If the value is a function, then the function is applied and any
-    arguments of the function are taken from the stack. If the value is not a
-    function then the value itself is pushed onto the stack.
+    Expressions are sequences of words (or other syntactic elements) written in postfix 
+    form. All words are are executed in left to right order as they are encountered. 
+    When a word is executed it looks up the value bound to that word. If the value is a 
+    function, then the function is applied and any arguments of the function are taken 
+    from the stack. If the value is not a function then the value itself is pushed onto 
+    the stack. 
 
     
     2 3 *  -->  6
@@ -174,13 +199,13 @@ NUMBERS
              pi can stand alone as well as being a suffix.
              pi  2pi  .5pi  .25pi
             
-        M - mega. scales the number by one million 1000000
+        M - mega. scales the number by one million 1000000.
             1M .5M
             
-        k - kilo. scales the number by 1000
+        k - kilo. scales the number by 1000.
             4k 1.5k
         
-        h - hecto. scales the number by 100
+        h - hecto. scales the number by 100.
             8h
             
         c - centi. scales the number by .01
@@ -193,9 +218,9 @@ NUMBERS
             20u
     
     Infix fractions with no intervening spaces are interpreted as literal real 
-	numbers. Both the numerator and denominator can be floating point as 
-	described above.
-	
+    numbers. Both the numerator and denominator can be floating point as 
+    described above.
+    
         5/4  9/7  15/11  pi/4  7.5/4  1k/3
     
 
@@ -205,9 +230,9 @@ STRINGS
     
     "This is a string"
     
-	\\n is newline and \\t is tab.
-	
-	"\\tThis string begins with a tab and ends with a newline.\\n"
+    \\n is newline and \\t is tab.
+    
+    "\\tThis string begins with a tab and ends with a newline.\\n"
 
 WORDS
     Words are sequences of characters delimited by spaces, square brackets,
@@ -216,10 +241,10 @@ WORDS
     
     these are words
 
-	When a word is executed it looks up the value bound to that word. If the
-	value is a function, then the function is applied and any arguments of the
-	function are taken from the stack. If the value is not a function then the
-	value itself is pushed onto the stack. 
+    When a word is executed it looks up the value bound to that word. If the
+    value is a function, then the function is applied and any arguments of the
+    function are taken from the stack. If the value is not a function then the
+    value itself is pushed onto the stack. 
 
 QUOTES
     There are certain symbols that, when immediately preceding a word, change
@@ -240,9 +265,9 @@ QUOTES
     itself onto the stack.
         'sin
     
-    If a word is preceded by comma, the interpreter pops the object on top of 
-    the stack, looks up the value bound to the symbol in the object, and pushes
-    that value onto the stack.
+    If a word is preceded by comma, the interpreter pops the object on top of the
+    stack, looks up the value bound to the symbol in the object, and pushes that
+    value onto the stack.
         ,name
     
     If a word is preceded by dot, the interpreter looks up the value bound to
@@ -256,25 +281,26 @@ QUOTES
     possible to bind values to symbols outside the current scope.
         
         123 = x
-    
-    You can bind multiple values from the stack using parentheses after the = sign.
+ 
+	You can bind multiple values from the stack using parentheses after the = sign.
 	This saves having to pop them off and bind them in reverse order.
-	
+
 		1 2 3 = (a b c)    ; is equivalent to:   1 2 3 = c = b = a
 		a b c --> 1 2 3
-	
+
 	You can bind values from lists using square brackets after the = sign.
 
 		[1 2 3 4 5] = [a b c]
 		a b c --> 1 2 3
-		
+	
 		#[1 2 3 4 5] = [a b c]  ; also works for signals. Don't use # on the right hand side.
 		a b c --> 1 2 3
-		
-	Don't get clever though:
 	
-	[1 2][3 4] = ([a b][c d])  ; syntax error. nested destructuring is not supported.
+	Don't get clever though:
 
+	[1 2][3 4] = ([a b][c d])  ; syntax error. nested destructuring is not supported.
+    
+    
 FUNCTIONS
 
     Functions are a backslash followed by a list of argument names, followed by
@@ -282,9 +308,9 @@ FUNCTIONS
     
     \a b [a b + a b *]
     
-	When the interpreter encounters a function in the code, it creates an 
-	instance of the function that captures the free variables of the function 
-	and pushes that onto the stack. It does not apply the function.
+    When the interpreter encounters a function in the code, it creates an instance
+    of the function that captures the free variables of the function and pushes that
+    onto the stack. It does not apply the function.
     A function may be applied using the ! operator.
     
     3 4 \a b [a b + a b *] !  -->  7 12
@@ -293,17 +319,17 @@ FUNCTIONS
     
     \a b [a b + a b *] = blub
     3 4 blub  -->  7 12
-	
-	Optionally, a help string may follow the function arguments.
-	
-	\a b 
-		"(a b --> sum product) returns the sum and product of a and b." 
-		[a b + a b *]
-	
-	Unlike other concatenative languages, the body of a function is executed on 
-	an empty stack. Values from the calling stack are not accessible except via 
-	the named arguments.
-	
+    
+    Optionally, a help string may follow the function arguments.
+    
+    \a b 
+        "(a b --> sum product) returns the sum and product of a and b." 
+        [a b + a b *]
+    
+    Unlike other concatenative languages, the body of a function is executed on 
+    an empty stack. Values from the calling stack are not accessible except via 
+    the named arguments.
+    
 LISTS
 
     Lists are created by writing expressions within square brackets. The
@@ -318,49 +344,49 @@ LISTS
 
     There are two types of lists, value lists aka "streams" and numeric lists
     aka "signals". Signals are defined using an initial '#' character as follows.
-	
-	#[1 2 3]
-	
+    
+    #[1 2 3]
+    
     #[1 2 + 3 4 *]  -->  #[3 12]
 
 FORMS
-	Also known as dictionary, map, or record, a Form is a set of bindings from 
-	keys to values. Forms may inherit from other forms.
-	Forms are enclosed in curly braces. Keys are preceeded by colons.
-	
-	{ :a 1 :b 2 } = x    ; the value 1 is bound to the key a, and the value 2 is 
-						 ; bound to the key b.
-	
-	{ x :c 3 } = y       ; y inherits from x and binds the value 3 to the key c.
-	
-	The position of keys is actually completely arbitrary within the braces. It 
-	is only required that the number of values pushed onto the stack equals, or 
-	in the case of inheritance exceeds by one, the number of keys.
-	
-	So the following are completely equivalent to the above:
-	
-	{1 2 :a :b} = x
-	{x 3 :c} = y
+    Also known as dictionary, map, or record, a Form is a set of bindings from keys 
+    to values. Forms may inherit from other forms.
+    Forms are enclosed in curly braces. Keys are preceeded by colons.
+    
+    { :a 1 :b 2 } = x    ; the value 1 is bound to the key a, and the value 2 is 
+                         ; bound to the key b.
+    
+    { x :c 3 } = y       ; y inherits from x and binds the value 3 to the key c.
+    
+    The position of keys is actually completely arbitrary within the braces. It is 
+    only required that the number of values pushed onto the stack equals, or in the 
+    case of inheritance exceeds by one, the number of keys.
+    
+    So the following are completely equivalent to the above:
+    
+    {1 2 :a :b} = x
+    {x 3 :c} = y
 
-	{:a :b 1 2} = x
-	{:c x 3} = y
+    {:a :b 1 2} = x
+    {:c x 3} = y
 
-	This can be useful when returning multiple values from functions and binding 
-	them to multiple keys. In general, I would recommend the first syntax above 
-	for most cases.
-	
-	Multiple inheritance is supported by specifying a list of parents.
-	Multiple inheritance is an experimental feature and may be removed since it
-	prevents certain optimizations that may prove more useful.
-	Parent objects are ordered according to an algorithm defined for
-	the Dylan programming language[6].
+    This can be useful when returning multiple values from functions and binding 
+    them to multiple keys. In general, I would recommend the first syntax above for 
+    most cases.
+    
+    Multiple inheritance is supported by specifying a list of parents.
+    Multiple inheritance is an experimental feature and may be removed since it
+    prevents certain optimizations that may prove more useful.
+    Parent objects are ordered according to an algorithm defined for
+    the Dylan programming language[6].
 
-	{:a 1} = a
-	{a :b 2} = b
-	{a :c 3} = c
-	{[b c] :d 4} = d		; inherit first from b then from c.
-	d --> {{{{:a 1}  :c 3}  :b 2}  :d 4}   ; b is reached before c in traversal.
-										   ; a is inherited from only once.
+    {:a 1} = a
+    {a :b 2} = b
+    {a :c 3} = c
+    {[b c] :d 4} = d        ; inherit first from b then from c.
+    d --> {{{{:a 1}  :c 3}  :b 2}  :d 4}   ; b is reached before c in traversal.
+                                           ; a is inherited from only once.
 
 AUTO-MAPPING
 
@@ -389,8 +415,8 @@ AUTO-MAPPING
         [0 1][5 4 3] to  -->  [[0 1 2 3 4 5][1 2 3 4]]
         
     Auto-mapping may be performed over infinite lists. ord is a function which 
-	returns an infinite list of integers starting with 1. 
-		ord --> [1 2 3 4 5 ...]
+    returns an infinite list of integers starting with 1. 
+        ord --> [1 2 3 4 5 ...]
     
         0 ord to  -->  [[0 1][0 1 2][0 1 2 3][0 1 2 3 4][0 1 2 3 4 5]...]
 
@@ -427,64 +453,64 @@ THE "EACH" OPERATOR
         [1 2] [10 20] @ +  -->  [[11 12] [21 22]]
         
     This works because math operators auto-map over lists. 
-    Other operators do not auto-map over lists, for example the pair operator.
-    Pair creates a two item list from the two items on the top of the stack.
+    Other operators do not auto-map over lists, for example the 2ple operator.
+    2ple creates a two item list from the two items on the top of the stack.
     
-        [1 2] [10 20] pair  -->  [[1 2] [10 20]] 
+        [1 2] [10 20] 2ple  -->  [[1 2] [10 20]] 
 
-        [1 2] @ [10 20] pair  -->  [[1 [10 20]] [2 [10 20]]]
+        [1 2] @ [10 20] 2ple  -->  [[1 [10 20]] [2 [10 20]]]
         
-        [1 2] [10 20] @ pair  -->  [[[1 2] 10] [[1 2] 20]]
-		
-		[1 2] @ [10 20] @ pair --> [[1 10] [2 20]]
+        [1 2] [10 20] @ 2ple  -->  [[[1 2] 10] [[1 2] 20]]
+        
+        [1 2] @ [10 20] @ 2ple --> [[1 10] [2 20]]
         
     In order to do an outer product we need to use ordered each operators. These
     perform nested loops.
     
-        [1 2] @1 [10 20] @2 pair  -->  [[[1 10] [1 20]] [[2 10] [2 20]]]
+        [1 2] @1 [10 20] @2 2ple  -->  [[[1 10] [1 20]] [[2 10] [2 20]]]
         
-        [1 2] @2 [10 20] @1 pair  -->  [[[1 10] [2 10]] [[1 20] [2 20]]]
+        [1 2] @2 [10 20] @1 2ple  -->  [[[1 10] [2 10]] [[1 20] [2 20]]]
         
         
     You can do mapping two (or more) levels deep with @@ (or @@@, @@@@, etc) :
     
         [[[1 2 3] [4 5]] [[6 7] [8 9 10]]] @@ reverse  
-        	-->  [[[3 2 1] [5 4]] [[7 6] [10 9 8]]]
-	
-	ord @1 ord @2 to   --> an infinite list of infinite lists of finite lists:
+            -->  [[[3 2 1] [5 4]] [[7 6] [10 9 8]]]
+    
+    ord @1 ord @2 to   --> an infinite list of infinite lists of finite lists:
         [
-			[[1] [1 2] [1 2 3] [1 2 3 4] [1 2 3 4 5] ...] 
-			[[2 1] [2] [2 3] [2 3 4] [2 3 4 5] ...] 
-			[[3 2 1] [3 2] [3] [3 4] [3 4 5] ...] 
-			[[4 3 2 1] [4 3 2] [4 3] [4] [4 5] ...] 
-			[[5 4 3 2 1] [5 4 3 2] [5 4 3] [5 4] [5] ...] 
-			...
-		]
+            [[1] [1 2] [1 2 3] [1 2 3 4] [1 2 3 4 5] ...] 
+            [[2 1] [2] [2 3] [2 3 4] [2 3 4 5] ...] 
+            [[3 2 1] [3 2] [3] [3 4] [3 4 5] ...] 
+            [[4 3 2 1] [4 3 2] [4 3] [4] [4 5] ...] 
+            [[5 4 3 2 1] [5 4 3 2] [5 4 3] [5 4] [5] ...] 
+            ...
+        ]
 
-	Lists of Forms can be constructed using the each operator.
-	
-	{:a ord @ :b 0}  -->  [{:a 1 :b 0} {:a 2 :b 0} {:a 3 :b 0} {:a 4 :b 0} ...]
-	
-	{:a 1 3 to @1  :b 1 4 to @2}  -->          ; outer product
-		[
-			[{:a 1  :b 1} {:a 1  :b 2} {:a 1  :b 3} {:a 1  :b 4}]
-			[{:a 2  :b 1} {:a 2  :b 2} {:a 2  :b 3} {:a 2  :b 4}]
-			[{:a 3  :b 1} {:a 3  :b 2} {:a 3  :b 3} {:a 3  :b 4}]
-		]
-		
-	Lists of lists can be created using the each operator within the list
-	constructor syntax:
-	
-	[[1 2 3] @ 4 5] --> [[1 4 5] [2 4 5] [3 4 5]]
-	
-	[[1 2 3] @1 [4 5 6] @2] --> 
-	      [[[1 4] [1 5] [1 6]] [[2 4] [2 5] [2 6]] [[3 4] [3 5] [3 6]]]
+    Lists of Forms can be constructed using the each operator.
+    
+    {:a ord @ :b 0}  -->  [{:a 1 :b 0} {:a 2 :b 0} {:a 3 :b 0} {:a 4 :b 0} ...]
+    
+    {:a 1 3 to @1  :b 1 4 to @2}  -->          ; outer product
+        [
+            [{:a 1  :b 1} {:a 1  :b 2} {:a 1  :b 3} {:a 1  :b 4}]
+            [{:a 2  :b 1} {:a 2  :b 2} {:a 2  :b 3} {:a 2  :b 4}]
+            [{:a 3  :b 1} {:a 3  :b 2} {:a 3  :b 3} {:a 3  :b 4}]
+        ]
+        
+    Lists of lists can be created using the each operator within the list
+    constructor syntax:
+    
+    [[1 2 3] @ 4 5] --> [[1 4 5] [2 4 5] [3 4 5]]
+    
+    [[1 2 3] @1 [4 5 6] @2] --> 
+            [[[1 4] [1 5] [1 6]] [[2 4] [2 5] [2 6]] [[3 4] [3 5] [3 6]]]
 
 MULTI-CHANNEL EXPANSION
 
     Multi-channel expansion is a kind of auto-mapping for operators that process
-    signals and not streams (for example, unit generators). These operators 
-    auto-map over streams, but not signals.
+    signals and not streams (for example, unit generators). These operators auto-map
+    over streams, but not signals.
     
     ; the saw oscillator expands over the list [300 301] to produce stereo
     ; channels that beat with each other at 1 Hz.
@@ -511,13 +537,9 @@ REDUCING AND SCANNING MATH OPERATORS
     -^ and +\ are inverses of each other.
     [7 9 16 20 1 5] -^   --> [7 2 7 4 -19 4]        pairwise difference
     [7 2 7 4 -19 4] +\   --> [7 9 16 20 1 5]        accumulation
-	
-	
-    
 
 
-
-REFERENCES	
+REFERENCES    
 
 1. http://www.kevinalbrecht.com/code/joy-mirror/joy.html
 
