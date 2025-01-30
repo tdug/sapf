@@ -47,6 +47,7 @@ class MyManta : public Manta
 	virtual void DebugPrint(const char *fmt, ...) {}
 };
 
+Manta* manta();
 Manta* manta()
 {
 	static MyManta* sManta = new MyManta();

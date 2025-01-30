@@ -523,7 +523,7 @@ static void midiConnectInput_(Thread& th, Prim* prim)
 
 static void midiDisconnectInput_(Thread& th, Prim* prim)
 {
-	int index = th.popInt("midiDisconnectInput : port");
+	int index = (int)th.popInt("midiDisconnectInput : port");
 	int uid = (int)th.popInt("midiDisconnectInput : sourceUID");
 	prDisconnectMIDIIn(uid, index);
 }

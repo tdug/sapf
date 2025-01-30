@@ -32,9 +32,9 @@
 const int kNumTables = 30; // third octave tables.
 const int kWaveTableSize = 16384;
 const int kWaveTableMask = kWaveTableSize - 1;
-const int kWaveTableByteSize = kWaveTableSize * sizeof(Z);
+//const int kWaveTableByteSize = kWaveTableSize * sizeof(Z);
 const int kWaveTableTotalSize = kWaveTableSize * kNumTables;
-const Z kPhaseInc = kTwoPi / kWaveTableSize;
+//const Z kPhaseInc = kTwoPi / kWaveTableSize;
 const Z kWaveTableSizeF = kWaveTableSize;
 
 // the maximum number of harmonics is actually 1024, but 1290 is needed for extrapolation.

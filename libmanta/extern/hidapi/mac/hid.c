@@ -284,7 +284,7 @@ static int get_string_property_utf8(IOHIDDeviceRef device, CFStringRef prop, cha
 			&used_buf_len);
 
 		buf[chars_copied] = 0;
-		return used_buf_len;
+		return (int)used_buf_len;
 	}
 	else
 		return 0;

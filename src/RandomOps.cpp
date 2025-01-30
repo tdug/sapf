@@ -1677,13 +1677,13 @@ struct WangNoise : OneInputUGen<WangNoise>
 		if (aStride == 0) {
 			Z a = *aa;
 			for (int i = 0; i < n; ++i) {
-				uint32_t x = hash64shift(k++);
+				uint32_t x = (uint32_t)hash64shift(k++);
 				out[i] = itof2(x,a);
 			}
 		} else {
 			for (int i = 0; i < n; ++i) {
 				Z a = *aa; aa += aStride;
-				uint32_t x = hash64shift(k++);
+				uint32_t x = (uint32_t)hash64shift(k++);
 				out[i] = itof2(x,a);
 			}
 		}

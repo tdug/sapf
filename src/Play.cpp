@@ -24,7 +24,6 @@
 pthread_mutex_t gPlayerMutex = PTHREAD_MUTEX_INITIALIZER;
 
 const int kMaxChannels = 32;
-const int kNumABLs = 3;
 
 struct AUPlayer* gAllPlayers = nullptr;
 

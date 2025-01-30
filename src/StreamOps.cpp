@@ -3661,7 +3661,7 @@ struct Takez : Gen
 		if (_n <= 0) {
 			end();
 		} else {
-            int framesToFill = (int)std::min(_n, (int64_t)mBlockSize);std::min(_n, (int64_t)mBlockSize);
+            int framesToFill = (int)std::min(_n, (int64_t)mBlockSize);
             Z* out = mOut->fulfillz(framesToFill);
             while (framesToFill) {
                 int n = framesToFill;
@@ -5677,7 +5677,7 @@ static void bench_(Thread& th, Prim* prim)
 
 #include "Spectrogram.hpp"
 
-int32_t gSpectrogramFileCount = 0;
+std::atomic<int32_t> gSpectrogramFileCount = 0;
 
 static void sgram_(Thread& th, Prim* prim)
 {
@@ -5695,7 +5695,7 @@ static void sgram_(Thread& th, Prim* prim)
 		if (!sgramDir || strlen(sgramDir)==0) sgramDir = "/tmp";
 		snprintf(path, 1024, "%s/%s-%d.jpg", sgramDir, ((String*)filename.o())->s, (int)floor(dBfloor + .5));
 	} else {
-		int32_t count = OSAtomicIncrement32(&gSpectrogramFileCount);
+		int32_t count = ++gSpectrogramFileCount;
 		snprintf(path, 1024, "/tmp/sapf-%s-%04d.jpg", gSessionTime, count);
 	}
 
