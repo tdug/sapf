@@ -15,7 +15,11 @@
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "elapsedTime.hpp"
+#ifdef SAPF_MACH_TIME
 #include <mach/mach_time.h>
+#else
+#include <chrono>
+#endif // SAPF_MACH_TIME
 #include <pthread.h>
 
 extern "C" {
@@ -24,14 +28,24 @@ static double gHostClockFreq;
 
 void initElapsedTime()
 {
+#ifdef SAPF_MACH_TIME
 	struct mach_timebase_info info;
 	mach_timebase_info(&info);
 	gHostClockFreq = 1e9 * ((double)info.numer / (double)info.denom);
+#else
+        gHostClockFreq = 0.0;
+#endif // SAPF_MACH_TIME
 }
 
 double elapsedTime()
 {
+#ifdef SAPF_MACH_TIME
 	return (double)mach_absolute_time() / gHostClockFreq;
+#else
+        return (double) std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()
+        ).count() / 10e9;
+#endif // SAPF_MACH_TIME
 }
 
 }

@@ -17,12 +17,40 @@
 #ifndef __taggeddoubles__dsp__
 #define __taggeddoubles__dsp__
 
+#ifdef SAPF_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#else
+#include <fftw3.h>
+#endif // SAPF_ACCELERATE
 
 const int kMinFFTLogSize = 2;
 const int kMaxFFTLogSize = 16;
 
-extern FFTSetupD fftSetups[kMaxFFTLogSize+1];
+class FFT {
+public:
+    ~FFT();
+    void init(size_t log2n);
+    void forward(double *inReal, double *inImag, double *outReal, double *outImag);
+    void backward(double *inReal, double *inImag, double *outReal, double *outImag);
+    void forward_in_place(double *ioReal, double *ioImag);
+    void backward_in_place(double *ioReal, double *ioImag);
+    void forward_real(double *inReal, double *outReal, double *outImag);
+    void backward_real(double *inReal, double *inImag, double *outReal);
+
+    size_t n;
+    size_t log2n;
+private:
+#ifdef SAPF_ACCELERATE
+    FFTSetupD setup;
+#else
+    fftw_complex *in;
+    fftw_complex *out;
+    fftw_plan forward_plan;
+    fftw_plan backward_plan;
+#endif // SAPF_ACCELERATE    
+};
+
+extern FFT ffts[kMaxFFTLogSize+1];
 
 void initFFT();
 void fft (int n, double* ioReal, double* ioImag);

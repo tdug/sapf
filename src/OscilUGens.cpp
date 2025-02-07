@@ -21,11 +21,16 @@
 #include "VM.hpp"
 #include "clz.hpp"
 #include "dsp.hpp"
+#include <climits>
 #include <cmath>
 #include <float.h>
 #include <vector>
 #include <algorithm>
+#ifdef SAPF_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#else
+// TODO
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +91,6 @@ static void normalize(int n, Z* buf)
 	}
 }
 
-
 static void fillWaveTable(int n, Z* amps, int ampStride, Z* phases, int phaseStride, Z smooth, Z* table)
 {
 	const size_t kWaveTableSize2 = kWaveTableSize / 2;
@@ -111,13 +115,17 @@ static void fillWaveTable(int n, Z* amps, int ampStride, Z* phases, int phaseStr
 		phases += phaseStride;
 	}
 	
+#ifdef SAPF_ACCELERATE
 	DSPDoubleSplitComplex in;
 	in.realp = real;
 	in.imagp = imag;
-	
+
 	vDSP_ztocD(&in, 1, (DSPDoubleComplex*)polar, 2, kWaveTableSize2);
 	vDSP_rectD(polar, 2, rect, 2, kWaveTableSize2);
 	vDSP_ctozD((DSPDoubleComplex*)rect, 2, &in, 1, kWaveTableSize2);
+#else
+        // TODO
+#endif // SAPF_ACCELERATE
 	rifft(kWaveTableSize, real, imag, table);
 }
 
@@ -1152,7 +1160,7 @@ struct SinOsc : public OneInputUGen<SinOsc>
 		
 	void calc(int n, Z* out, Z* freq, int freqStride) 
 	{
-#if 1
+#if SAPF_ACCELERATE
 		for (int i = 0; i < n; ++i) {
 			out[i] = phase;
 			phase += *freq * freqmul;
@@ -1300,15 +1308,26 @@ struct SinOscPM : public TwoInputUGen<SinOscPM>
 		
 	void calc(int n, Z* out, Z* freq, Z* phasemod, int freqStride, int phasemodStride) 
 	{
-		for (int i = 0; i < n; ++i) {
-			out[i] = phase + *phasemod * kTwoPi;
-			phase += *freq * freqmul;
-			freq += freqStride;
-			phasemod += phasemodStride;
-			if (phase >= kTwoPi) phase -= kTwoPi;
-			else if (phase < 0.) phase += kTwoPi;
-		}
-		vvsin(out, out, &n);
+#if SAPF_ACCELERATE
+            for (int i = 0; i < n; ++i) {
+                out[i] = phase + *phasemod * kTwoPi;
+                phase += *freq * freqmul;
+                freq += freqStride;
+                phasemod += phasemodStride;
+                if (phase >= kTwoPi) phase -= kTwoPi;
+                else if (phase < 0.) phase += kTwoPi;
+            }
+            vvsin(out, out, &n);
+#else
+            for (int i = 0; i < n; ++i) {
+                out[i] = sin(phase + *phasemod * kTwoPi);
+                phase += *freq * freqmul;
+                freq += freqStride;
+                phasemod += phasemodStride;
+                if (phase >= kTwoPi) phase -= kTwoPi;
+                else if (phase < 0.) phase += kTwoPi;
+            }
+#endif
 	}
 };
 

@@ -17,6 +17,7 @@
 #include "VM.hpp"
 #include "clz.hpp"
 #include "elapsedTime.hpp"
+#include <climits>
 #include <cmath>
 #include <memory>
 #include <float.h>
@@ -25,7 +26,10 @@
 #include "MultichannelExpansion.hpp"
 #include "UGen.hpp"
 #include "dsp.hpp"
+
+#ifdef SAPF_AUDIOTOOLBOX
 #include "SoundFiles.hpp"
+#endif
 
 const Z kOneThird = 1. / 3.;
 
@@ -3233,7 +3237,7 @@ static void mum_(Thread& th, Prim* prim)
 	Z t = th.popFloat("mum : duration");
 	
 	int64_t n = (int64_t)floor(.5 + th.rate.sampleRate * t);
-	if (isinf(t) || (n <= 0 && t > 0.)) {
+	if (std::isinf(t) || (n <= 0 && t > 0.)) {
 		th.push(new List(new Everz(th, 0.)));
 	} else {
 		Gen* g = new Silence(th, n);
@@ -4095,7 +4099,7 @@ static void drop_(Thread& th, Prim* prim)
 		int64_t size = s->length(th);
 		n = -n;
 		
-		int64_t remain = std::max(0LL, size - n);
+		int64_t remain = std::max(INT64_C(0), size - n);
 		if (remain <= 0) {
 			th.push(vm.getNil(s->elemType));
 			return;
@@ -5476,6 +5480,7 @@ static void longas0_(Thread& th, Prim* prim)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef SAPF_AUDIOTOOLBOX
 #include "Play.hpp"
 
 static void play_(Thread& th, Prim* prim)
@@ -5501,6 +5506,9 @@ static void stopDone_(Thread& th, Prim* prim)
 	stopPlayingIfDone();
 }
 
+#else
+// TODO
+#endif SAPF_AUDIOTOOLBOX
 
 static void interleave(int stride, int numFrames, double* in, float* out)
 {
@@ -5582,6 +5590,7 @@ static void setSessionTime()
 }
 
 
+#ifdef SAPF_AUDIOTOOLBOX
 static void sfwrite_(Thread& th, Prim* prim)
 {
 	
@@ -5610,6 +5619,7 @@ static void sfread_(Thread& th, Prim* prim)
 		
 	sfread(th, filename, 0, -1);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static void bench_(Thread& th, Prim* prim)
@@ -5713,6 +5723,9 @@ static void sgram_(Thread& th, Prim* prim)
 	}
 	
 }
+#else
+// TODO
+#endif // SAPF_AUDIOTOOLBOX
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -5791,8 +5804,12 @@ static void hanning_(Thread& th, Prim* prim)
 	
 	P<List> out = new List(itemTypeZ, n);
 	out->mArray->setSize(n);
-	
+
+#ifdef SAPF_ACCELERATE
 	vDSP_hann_windowD(out->mArray->z(), n, 0);
+#else
+        // TODO
+#endif // SAPF_ACCELERATE
 	
 	th.push(out);
 }
@@ -5803,8 +5820,12 @@ static void hamming_(Thread& th, Prim* prim)
 	
 	P<List> out = new List(itemTypeZ, n);
 	out->mArray->setSize(n);
-	
+
+#ifdef SAPF_ACCELERATE
 	vDSP_hamm_windowD(out->mArray->z(), n, 0);
+#else
+        // TODO
+#endif // SAPF_ACCELERATE
 	
 	th.push(out);
 }
@@ -5815,8 +5836,12 @@ static void blackman_(Thread& th, Prim* prim)
 	
 	P<List> out = new List(itemTypeZ, n);
 	out->mArray->setSize(n);
-	
+
+#ifdef SAPF_ACCELERATE
 	vDSP_blkman_windowD(out->mArray->z(), n, 0);
+#else
+        // TODO
+#endif // SAPF_ACCELERATE
 	
 	th.push(out);
 }
@@ -5924,7 +5949,11 @@ struct WinSegment : public Gen
 			segment->mArray->setSize(length_);
             Z* segbuf = segment->mArray->z();
 			bool nomore = in_.fillSegment(th, (int)length_, segbuf);
+#ifdef SAPF_ACCELERATE
             vDSP_vmulD(segbuf, 1, window_->z(), 1, segbuf, 1, length_);
+#else
+            // TODO
+#endif // SAPF_ACCELERATE
 			out[i] = segment;
 			++framesFilled;
 			if (nomore) {
@@ -7772,6 +7801,7 @@ void AddStreamOps()
 	DEFAM(seg, zaa, "(in hops durs --> out) divide input signal in to a stream of signal segments of given duration stepping by hop time.")
 	DEFAM(wseg, zaz, "(in hops window --> out) divide input signal in to a stream of windowed signal segments of lengths equal to the window length, stepping by hop time.")
 
+#ifdef SAPF_AUDIOTOOLBOX
 	vm.addBifHelp("\n*** audio I/O operations ***");
 	DEF(play, 1, 0, "(channels -->) plays the audio to the hardware.")
 	DEF(record, 2, 0, "(channels filename -->) plays the audio to the hardware and records it to a file.")
@@ -7780,8 +7810,11 @@ void AddStreamOps()
 	vm.def(">sf", 2, 0, sfwrite_, "(channels filename -->) writes the audio to a file.");
 	vm.def(">sfo", 2, 0, sfwriteopen_, "(channels filename -->) writes the audio to a file and opens it in the default application.");
 	//vm.def("sf>", 2, sfread_);
-	DEF(bench, 1, 0, "(channels -->) prints the amount of CPU required to compute a segment of audio. audio must be of finite duration.")	
+	DEF(bench, 1, 0, "(channels -->) prints the amount of CPU required to compute a segment of audio. audio must be of finite duration.")
 	vm.def("sgram", 3, 0, sgram_, "(signal dBfloor filename -->) writes a spectrogram to a file and opens it.");
+#else
+        // TODO
+#endif // SAPF_AUDIOTOOLBOX
 
 	setSessionTime();
 

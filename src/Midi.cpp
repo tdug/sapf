@@ -14,6 +14,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#ifdef SAPF_COREMIDI
 #include "Midi.hpp"
 #include "VM.hpp"
 #include "UGen.hpp"
@@ -21,7 +22,6 @@
 #include <CoreMidi/CoreMidi.h>
 #include <vector>
 #include <mach/mach_time.h>
-
 
 struct MidiChanState
 {
@@ -1255,9 +1255,13 @@ static void xmlastvel_(Thread& th, Prim* prim)
 #define DEF(NAME, TAKES, LEAVES, HELP) 	vm.def(#NAME, TAKES, LEAVES, NAME##_, HELP);
 #define DEFMCX(NAME, N, HELP) 	vm.defmcx(#NAME, N, NAME##_, HELP);
 #define DEFAM(NAME, MASK, HELP) 	vm.defautomap(#NAME, #MASK, NAME##_, HELP);
+#else
+// TODO cross-platform midi backend
+#endif // SAPF_COREMIDI
 
 void AddMidiOps()
 {
+#ifdef SAPF_COREMIDI
 	vm.addBifHelp("\n*** MIDI control ***");
 	DEF(midiStart, 0, 0, "(-->) start up MIDI services");
 	DEF(midiRestart, 0, 0, "(-->) rescan MIDI services");
@@ -1302,6 +1306,6 @@ void AddMidiOps()
 
 	vm.addBifHelp("\n*** ZRef control signal ***");
 	DEFMCX(zctl, 1, "(zref --> out) makes a smoothed control signal from a zref.");
+#endif // SAPF_COREMIDI
 }
-
 

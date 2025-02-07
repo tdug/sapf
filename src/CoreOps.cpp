@@ -1324,9 +1324,17 @@ static void glob_(Thread& th, Prim* prim)
 	glob_t g;
 	memset(&g, 0, sizeof(g));
 	glob(pat->s, GLOB_MARK, nullptr, &g);
-	
-	P<Array> a = new Array(itemTypeV, g.gl_matchc);
-	for (int i = 0; i < g.gl_matchc; ++i) {
+
+        size_t count;
+#ifdef GLOB_NOMATCH
+        // TODO is this correct?
+        count = (size_t) g.gl_pathc;
+#else
+        count = (size_t) g.gl_matchc;
+#endif
+        
+	P<Array> a = new Array(itemTypeV, count);
+	for (int i = 0; i < count; ++i) {
 		a->add(new String(g.gl_pathv[i]));
 	}
 	globfree(&g);

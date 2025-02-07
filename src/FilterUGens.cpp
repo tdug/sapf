@@ -19,11 +19,16 @@
 
 #include "VM.hpp"
 #include "clz.hpp"
+#include <climits>
 #include <cmath>
 #include <float.h>
 #include <vector>
 #include <algorithm>
+#ifdef SAPF_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#else
+// TODO
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

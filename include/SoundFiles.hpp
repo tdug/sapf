@@ -18,6 +18,7 @@
 #define __taggeddoubles__SoundFiles__
 
 #include "VM.hpp"
+#ifdef SAPF_AUDIOTOOLBOX
 #include <AudioToolbox/ExtendedAudioFile.h>
 
 const int kMaxSFChannels = 1024;
@@ -28,5 +29,8 @@ void makeRecordingPath(Arg filename, char* path, int len);
 ExtAudioFileRef sfcreate(Thread& th, const char* path, int numChannels, double fileSampleRate, bool interleaved);
 void sfwrite(Thread& th, V& v, Arg filename, bool openIt);
 void sfread(Thread& th, Arg filename, int64_t offset, int64_t frames);
+#else
+// TODO cross platform audio files
+#endif // SAPF_AUDIOTOOLBOX
 
 #endif /* defined(__taggeddoubles__SoundFiles__) */

@@ -15,12 +15,15 @@
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "Play.hpp"
+#ifdef SAPF_AUDIOTOOLBOX
 #include <AudioToolbox/AudioToolbox.h>
+#endif // SAPF_AUDIOTOOLBOX
 #include <pthread.h>
 #include <atomic>
 
 #include "SoundFiles.hpp"
 
+#ifdef SAPF_AUDIOTOOLBOX
 pthread_mutex_t gPlayerMutex = PTHREAD_MUTEX_INITIALIZER;
 
 const int kMaxChannels = 32;
@@ -79,9 +82,11 @@ static void stopPlayer(AUPlayer* player)
 	}
 	delete player;
 }
+#endif // SAPF_AUDIOTOOLBOX
 
 void stopPlaying()
 {
+#ifdef SAPF_AUDIOTOOLBOX
 	Locker lock(&gPlayerMutex);
 
 	AUPlayer* player = gAllPlayers;
@@ -90,11 +95,15 @@ void stopPlaying()
 		stopPlayer(player);
 		player = next;
 	}
+#else
+        // TODO: cross platform playback
+#endif // SAPF_AUDIOTOOLBOX
 }
 
 void stopPlayingIfDone()
 {
-	Locker lock(&gPlayerMutex);
+#ifdef SAPF_AUDIOTOOLBOX
+    Locker lock(&gPlayerMutex);
 	
 	AUPlayer* player = gAllPlayers;
 	while (player) {
@@ -103,8 +112,12 @@ void stopPlayingIfDone()
 			stopPlayer(player);
 		player = next;
 	}
+#else
+        // TODO: cross platform playback
+#endif // SAPF_AUDIOTOOLBOX
 }
 
+#ifdef SAPF_AUDIOTOOLBOX
 static void* stopDonePlayers(void* x)
 {
 	while(1) {
@@ -261,9 +274,11 @@ static OSStatus createGraph(AUPlayer* player)
 	
 	return noErr;
 }
+#endif // SAPF_AUDIOTOOLBOX
 
 void playWithAudioUnit(Thread& th, V& v)
 {
+#ifdef SAPF_AUDIOTOOLBOX
 	if (!v.isList()) wrongType("play : s", "List", v);
 
 	Locker lock(&gPlayerMutex);
@@ -310,11 +325,15 @@ void playWithAudioUnit(Thread& th, V& v)
 			throw errFailed;
 		}
 	}
+#else
+        // TODO: cross platform playback
+#endif // SAPF_AUDIOTOOLBOX
 }
 
 
 void recordWithAudioUnit(Thread& th, V& v, Arg filename)
 {
+#ifdef SAPF_AUDIOTOOLBOX
 	if (!v.isList()) wrongType("play : s", "List", v);
 
 	Locker lock(&gPlayerMutex);
@@ -385,5 +404,8 @@ void recordWithAudioUnit(Thread& th, V& v, Arg filename)
 			throw errFailed;
 		}
 	}
+#else
+        // TODO: cross platform playback
+#endif // SAPF_AUDIOTOOLBOX
 }
 

@@ -22,7 +22,11 @@
 #include "primes.hpp"
 #include <complex>
 #include <dispatch/dispatch.h>
+#ifdef SAPF_COREFOUNDATION
 #include <CoreFoundation/CoreFoundation.h>
+#endif // SAPF_COREFOUNDATION
+
+#ifdef SAPF_MANTA
 #include "Manta.h"
 
 class MyManta : public Manta
@@ -53,6 +57,7 @@ Manta* manta()
 	static MyManta* sManta = new MyManta();
 	return sManta;
 }
+#endif // SAPF_MANTA
 
 /* issue:
 
@@ -168,9 +173,10 @@ int main (int argc, const char * argv[])
 		snprintf(logfilename, PATH_MAX, "%s/sapf-log.txt", home_dir);
 		vm.log_file = strdup(logfilename);
 	}
-	
+
 	__block Thread th;
 
+#ifdef SAPF_MANTA
 	auto m = manta();
 	try {
 		m->Connect();
@@ -189,6 +195,7 @@ int main (int argc, const char * argv[])
 			}
 		}
 	});
+#endif // SAPF_MANTA
 	
 	if (!vm.prelude_file) {
 		vm.prelude_file = getenv("SAPF_PRELUDE");
@@ -196,13 +203,21 @@ int main (int argc, const char * argv[])
 	if (vm.prelude_file) {
 		loadFile(th, vm.prelude_file);
 	}
-	
+
+#ifdef SAPF_COREFOUNDATION
+        // TODO does dispatch_async + CFRunLoopRun have any benefit over dispatch_sync?
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 		th.repl(stdin, vm.log_file);
 		exit(0);
 	});
-	
+        
 	CFRunLoopRun();
+#else
+	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+		th.repl(stdin, vm.log_file);
+		exit(0);
+	});
+#endif
 	
 	return 0;
 }

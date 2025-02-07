@@ -22,9 +22,14 @@
 #include "primes.hpp"
 #include <cmath>
 #include <float.h>
+#include <stdint.h>
 #include <vector>
 #include <algorithm>
+#ifdef SAPF_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#else
+// TODO
+#endif // SAPF_ACCELERATE
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1687,7 +1692,7 @@ public:
 				for (int i = 0; i < n; ++i) {
 					Z x[kNumDelays];
 
-					for (UInt32 j = 0; j < kNumDelays; ++j)
+					for (uint32_t j = 0; j < kNumDelays; ++j)
 					{
 						FDNDelay& d = mDelay[j];
 						// read from delay line
@@ -1730,7 +1735,7 @@ public:
 					Rout += Routstride;
 
 					// write back to delay line
-					for (UInt32 j = 0; j < kNumDelays; ++j) 
+					for (uint32_t j = 0; j < kNumDelays; ++j) 
 					{
 						FDNDelay& d = mDelay[j];						
 						

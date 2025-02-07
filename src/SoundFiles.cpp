@@ -17,6 +17,7 @@
 #include "SoundFiles.hpp"
 #include <valarray>
 
+#ifdef SAPF_AUDIOTOOLBOX
 extern char gSessionTime[256];
 
 
@@ -406,3 +407,6 @@ void sfwrite(Thread& th, V& v, Arg filename, bool openIt)
 		system(cmd);
 	}
 }
+#else
+// TODO cross platform audio files
+#endif // SAPF_AUDIOTOOLBOX

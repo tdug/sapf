@@ -20,6 +20,7 @@
 #include "Object.hpp"
 #include "symbol.hpp"
 #include "rgen.hpp"
+#include <climits>
 #include <vector>
 #include <sys/time.h>
 #include <atomic>

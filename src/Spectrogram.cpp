@@ -16,7 +16,9 @@
 
 #include "Spectrogram.hpp"
 #include "makeImage.hpp"
+#ifdef SAPF_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#endif // SAPF_ACCELERATE
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -96,6 +98,7 @@ const int border = 8;
 
 void spectrogram(int size, double* data, int width, int log2bins, const char* path, double dBfloor)
 {
+#ifdef SAPF_ACCELERATE
 	int numRealFreqs = 1 << log2bins;
 
 	int log2n = log2bins + 1;
@@ -219,6 +222,9 @@ void spectrogram(int size, double* data, int width, int log2bins, const char* pa
 	free(windowedData);
 	free(interleavedData);
 	free(resultData);
+#else
+        // TODO cross platform spectrogram
+#endif // SAPF_ACCELERATE
 }
 
 

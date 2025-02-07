@@ -23,7 +23,11 @@
 #include <float.h>
 #include <vector>
 #include <algorithm>
+#ifdef SAPF_ACCELERATE
 #include <Accelerate/Accelerate.h>
+#else
+//TODO
+#endif // SAPF_ACCELERATE
 
 
 
@@ -96,8 +100,8 @@ struct Fadeout : Gen
 	{
 		_sustainTime = (int64_t)floor(th.rate.sampleRate * sustainTime + .5);
 		_fadeTime = (int64_t)floor(th.rate.sampleRate * fadeTime + .5);
-		_sustainTime = std::max(1LL, _sustainTime);
-		_fadeTime = std::max(1LL, _fadeTime);
+		_sustainTime = std::max(INT64_C(1), _sustainTime);
+		_fadeTime = std::max(INT64_C(1), _fadeTime);
 		_amp = 1.001;
 		_fade = pow(.001, 1. / _fadeTime);
 	}
@@ -170,7 +174,7 @@ struct Fadein : Gen
 	Fadein(Thread& th, Arg a, Z fadeTime) : Gen(th, itemTypeZ, true), _a(a)
 	{
 		_fadeTime = (int64_t)floor(th.rate.sampleRate * fadeTime + .5);
-		_fadeTime = std::max(1LL, _fadeTime);
+		_fadeTime = std::max(INT64_C(1), _fadeTime);
 		_amp = .001;
 		_fade = pow(1000., 1. / _fadeTime);
 	}
@@ -241,10 +245,10 @@ struct Endfade : Gen
 		_startupTime = (int64_t)floor(th.rate.sampleRate * startupTime + .5);
 		_holdTime = (int64_t)floor(th.rate.sampleRate * holdTime + .5);
 		_fadeTime = (int64_t)floor(th.rate.sampleRate * fadeTime + .5);
-		_startupTime = std::max(0LL, _startupTime);
-		_holdTime = std::max(1LL, _holdTime);
+		_startupTime = std::max(INT64_C(0), _startupTime);
+		_holdTime = std::max(INT64_C(1), _holdTime);
 		_holdTimeRemaining = _holdTime;
-		_fadeTime = std::max(1LL, _fadeTime);
+		_fadeTime = std::max(INT64_C(1), _fadeTime);
 		_threshold = threshold;
 		_amp = 1.001;
 		_fade = pow(.001, 1. / _fadeTime);
@@ -4302,6 +4306,7 @@ static void ifold_(Thread& th, Prim* prim)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifdef SAPF_CARBON
 #include <Carbon/Carbon.h>
 
 struct MouseUGenGlobalState {
@@ -4521,6 +4526,9 @@ static void xmousey1_(Thread& th, Prim* prim)
 	Z z = lo * pow(hi / lo, gMouseUGenGlobals.mouseY);
 	th.push(z);
 }
+#else
+// TODO
+#endif // SAPF_CARBON
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -4541,9 +4549,13 @@ void AddUGenOps()
 	s_dt = getsym("dt");
 	s_out = getsym("out");
 
+#ifdef SAPF_CARBON
 	pthread_t mouseListenThread;
 	pthread_create (&mouseListenThread, nullptr, gstate_update_func, (void*)0);
-
+#else
+        // TODO
+#endif
+        
 	vm.addBifHelp("\n*** unit generators ***");
 	vm.defmcx("*+", 3, madd_, "(a b c --> out) multiply add. a b * c +");
 
@@ -4657,6 +4669,7 @@ void AddUGenOps()
 	DEFMCX(iwrap, 3, "(in lo hi --> out) constrain the input to the bounds by wrapping. all inputs treated as integers.")
 	DEFMCX(ifold, 3, "(in lo hi --> out) constrain the input to the bounds by folding at the edges. all inputs treated as integers.")
 
+#ifdef SAPF_CARBON
 	vm.addBifHelp("\n*** mouse control unit generators ***");
 	DEFMCX(mousex, 2, "(lo hi --> out) returns a signal of the X coordinate of the mouse mapped to the linear range lo to hi.");
 	DEFMCX(mousey, 2, "(lo hi --> out) returns a signal of the Y coordinate of the mouse mapped to the linear range lo to hi.");
@@ -4666,5 +4679,8 @@ void AddUGenOps()
 	DEFMCX(mousex1, 2, "(lo hi --> out) returns the current value of the X coordinate of the mouse mapped to the linear range lo to hi.");
 	DEFMCX(mousey1, 2, "(lo hi --> out) returns the current value of the Y coordinate of the mouse mapped to the linear range lo to hi.");
 	DEFMCX(xmousex1, 2, "(lo hi --> out) returns the current value of the X coordinate of the mouse mapped to the exponential range lo to hi.");
-	DEFMCX(xmousey1, 2, "(lo hi --> out) returns the current value of the Y coordinate of the mouse mapped to the exponential range lo to hi.");	
+	DEFMCX(xmousey1, 2, "(lo hi --> out) returns the current value of the Y coordinate of the mouse mapped to the exponential range lo to hi.");
+#else
+        // TODO
+#endif SAPF_CARBON
 }
