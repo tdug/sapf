@@ -2,6 +2,15 @@ project('sapf', ['cpp', 'objcpp'])
 
 cpp = meson.get_compiler('cpp')
 
+cpp_args = ['-fblocks']
+link_args = ['-lfftw3', '-lBlocksRuntime', '-ldispatch', '-ledit']
+deps = []
+
+if get_option('asan')
+  cpp_args += ['-fsanitize=address', '-O1', '-fno-omit-frame-pointer', '-g']
+  link_args += ['-fsanitize=address']
+endif
+
 if cpp.has_header('Accelerate/Accelerate.h')
   add_project_arguments('-DSAPF_ACCELERATE', language: 'cpp')
 endif
@@ -10,8 +19,11 @@ if cpp.has_header('os/lock.h')
   add_project_arguments('-DSAPF_APPLE_LOCK', language: 'cpp')
 endif
 
-if cpp.has_header('AudioToolbox/AudioToolbox.h ')
+if cpp.has_header('AudioToolbox/AudioToolbox.h')
   add_project_arguments('-DSAPF_AUDIOTOOLBOX', language: 'cpp')
+else
+  rtaudio_dep = dependency('rtaudio', required: true)
+  deps += rtaudio_dep
 endif
 
 if cpp.has_header('Carbon/Carbon.h')
@@ -69,6 +81,7 @@ executable(
   'sapf',
   sources,
   include_directories: [include_directories('include')],
-  cpp_args : '-fblocks',
-  link_args : ['-lfftw3','-lBlocksRuntime','-ldispatch','-ledit']
+  dependencies: deps,
+  cpp_args : cpp_args,
+  link_args : link_args
 )

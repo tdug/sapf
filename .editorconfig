@@ -1,0 +1,2 @@
+[*.{h,c,hpp,cpp,mm}]
+indent_style = tab

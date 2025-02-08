@@ -5480,7 +5480,6 @@ static void longas0_(Thread& th, Prim* prim)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef SAPF_AUDIOTOOLBOX
 #include "Play.hpp"
 
 static void play_(Thread& th, Prim* prim)
@@ -5505,10 +5504,6 @@ static void stopDone_(Thread& th, Prim* prim)
 {
 	stopPlayingIfDone();
 }
-
-#else
-// TODO
-#endif SAPF_AUDIOTOOLBOX
 
 static void interleave(int stride, int numFrames, double* in, float* out)
 {
@@ -7801,19 +7796,17 @@ void AddStreamOps()
 	DEFAM(seg, zaa, "(in hops durs --> out) divide input signal in to a stream of signal segments of given duration stepping by hop time.")
 	DEFAM(wseg, zaz, "(in hops window --> out) divide input signal in to a stream of windowed signal segments of lengths equal to the window length, stepping by hop time.")
 
-#ifdef SAPF_AUDIOTOOLBOX
 	vm.addBifHelp("\n*** audio I/O operations ***");
 	DEF(play, 1, 0, "(channels -->) plays the audio to the hardware.")
 	DEF(record, 2, 0, "(channels filename -->) plays the audio to the hardware and records it to a file.")
 	DEFnoeach(stop, 0, 0, "(-->) stops any audio playing.")
+#ifdef SAPF_AUDIOTOOLBOX
 	vm.def("sf>", 1, 0, sfread_, "(filename -->) read channels from an audio file. not real time.");
 	vm.def(">sf", 2, 0, sfwrite_, "(channels filename -->) writes the audio to a file.");
 	vm.def(">sfo", 2, 0, sfwriteopen_, "(channels filename -->) writes the audio to a file and opens it in the default application.");
 	//vm.def("sf>", 2, sfread_);
 	DEF(bench, 1, 0, "(channels -->) prints the amount of CPU required to compute a segment of audio. audio must be of finite duration.")
 	vm.def("sgram", 3, 0, sgram_, "(signal dBfloor filename -->) writes a spectrogram to a file and opens it.");
-#else
-        // TODO
 #endif // SAPF_AUDIOTOOLBOX
 
 	setSessionTime();

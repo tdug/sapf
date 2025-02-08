@@ -1,12 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = { self, nixpkgs, flake-utils, ... }:
     let
-      clangStdenv = pkgs: pkgs.llvmPackages_16.stdenv;
+      llvmPackages = pkgs: pkgs.llvmPackages_16;
     in
       {
         overlays.default = final: prev:
@@ -15,7 +15,7 @@
           in {
             # sapf = TODO;
             libdispatch = final.callPackage ./nix/libdispatch/default.nix {
-              stdenv = clangStdenv final;
+              stdenv = (llvmPackages final).stdenv;
             };
           };
       } //
@@ -25,7 +25,7 @@
             inherit system;
             overlays = [self.overlays.default];
           };
-          stdenv = clangStdenv pkgs;
+          stdenv = (llvmPackages pkgs).stdenv;
         in rec {
           # packages.default = pkgs.sapf;
 
@@ -36,8 +36,11 @@
               fftw
               libdispatch
               libedit
+              (llvmPackages pkgs).lldb
               meson
               ninja
+              pkg-config
+              rtaudio
             ];
 
             CC = "${stdenv}/bin/clang";
