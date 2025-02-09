@@ -40,7 +40,7 @@
               meson
               ninja
               pkg-config
-              rtaudio
+              rtaudio_6
             ];
 
             CC = "${stdenv}/bin/clang";

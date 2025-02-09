@@ -169,18 +169,13 @@ public:
 		RtAudio::StreamOptions options;
 		options.flags = RTAUDIO_NONINTERLEAVED /* | RTAUDIO_MINIMIZE_LATENCY | RTAUDIO_SCHEDULE_REALTIME */;
  
-		try {
-			dac.openStream(&parameters, NULL, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &rtPlayerBackendCallback, this->player, &options);
-			dac.startStream();
-		} catch(RtAudioError& e) {
-			e.printMessage();
-			exit(0); // problem with device settings
-		}
+		dac.openStream(&parameters, NULL, RTAUDIO_FLOAT32, sampleRate, &bufferFrames, &rtPlayerBackendCallback, this->player, &options);
+		dac.startStream();
 
 		post("start output unit OK\n");
    
 		char input;
-		std::cout << "\n...\n";
+		std::cout << "\n<press return to stop>\n";
 		std::cin.get(input);
  
 		// // Block released ... stop the stream

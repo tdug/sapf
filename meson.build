@@ -1,4 +1,8 @@
-project('sapf', ['cpp', 'objcpp'])
+project(
+  'sapf',
+  ['cpp', 'objcpp'],
+  meson_version : '>=1.1'
+)
 
 cpp = meson.get_compiler('cpp')
 
@@ -22,7 +26,7 @@ endif
 if cpp.has_header('AudioToolbox/AudioToolbox.h')
   add_project_arguments('-DSAPF_AUDIOTOOLBOX', language: 'cpp')
 else
-  rtaudio_dep = dependency('rtaudio', required: true)
+  rtaudio_dep = dependency('rtaudio', required: true, version: '>=6')
   deps += rtaudio_dep
 endif
 
