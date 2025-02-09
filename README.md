@@ -19,6 +19,6 @@ and you should get a binary at `./build/sapf`.
 if not using Nix, you will need to install dependencies manually and probably specify Clang as the compiler:
 
 ```shell
-meson setup build
+CC=clang CXX=clang++ meson setup build
 CC=clang CXX=clang++ meson compile -C build
 ```
