@@ -20,148 +20,208 @@
 #include <cmath>
 
 void FFT::init(size_t log2n) {
-    this->n = pow(2, log2n);
-    this->log2n = log2n;
+	this->n = pow(2, log2n);
+	this->log2n = log2n;
     
 #ifdef SAPF_ACCELERATE
-    this->setup = vDSP_create_fftsetupD(this->log2n, kFFTRadix2);
+	this->setup = vDSP_create_fftsetupD(this->log2n, kFFTRadix2);
 #else
-    this->in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * this->n);
-    this->out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * this->n);
-    this->forward_plan = fftw_plan_dft_1d(this->n, this->in, this->out, FFTW_FORWARD, FFTW_MEASURE);
-    this->backward_plan = fftw_plan_dft_1d(this->n, this->in, this->out, FFTW_BACKWARD, FFTW_MEASURE);
+	this->in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * this->n);
+	this->out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * this->n);
+	this->in_real = (double *) fftw_malloc(sizeof(double) * this->n);
+	this->out_real = (double *) fftw_malloc(sizeof(double) * this->n);
+	
+	this->forward_out_of_place_plan = fftw_plan_dft_1d(this->n, this->in, this->out, FFTW_FORWARD, FFTW_ESTIMATE);
+	this->backward_out_of_place_plan = fftw_plan_dft_1d(this->n, this->in, this->out, FFTW_BACKWARD, FFTW_ESTIMATE);
+	this->forward_in_place_plan = fftw_plan_dft_1d(this->n, this->in, this->in, FFTW_FORWARD, FFTW_ESTIMATE);
+	this->backward_in_place_plan = fftw_plan_dft_1d(this->n, this->in, this->in, FFTW_BACKWARD, FFTW_ESTIMATE);
+	this->forward_real_plan = fftw_plan_dft_r2c_1d(this->n, this->in_real, this->out, FFTW_ESTIMATE);
+	this->backward_real_plan = fftw_plan_dft_c2r_1d(this->n, this->in, this->out_real, FFTW_ESTIMATE);
 #endif // SAPF_ACCELERATE
 }
 
 FFT::~FFT() {
 #ifdef SAPF_ACCELERATE
-    vDSP_destroy_fftsetupD(this->setup);
+	vDSP_destroy_fftsetupD(this->setup);
 #else
-    fftw_destroy_plan(this->forward_plan);
-    fftw_destroy_plan(this->backward_plan);
-    fftw_free(this->in);
-    fftw_free(this->out);
+	fftw_destroy_plan(forward_out_of_place_plan);
+	fftw_destroy_plan(backward_out_of_place_plan);
+	fftw_destroy_plan(forward_in_place_plan);
+	fftw_destroy_plan(backward_in_place_plan);
+	fftw_destroy_plan(forward_real_plan);
+	fftw_destroy_plan(backward_real_plan);
+	
+	fftw_free(this->in);
+	fftw_free(this->out);
+	fftw_free(this->in_real);
+	fftw_free(this->out_real);
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::forward(double *inReal, double *inImag, double *outReal, double *outImag) {
+	double scale = 2. / this->n;
 #ifdef SAPF_ACCELERATE
-    DSPDoubleSplitComplex in;
-    DSPDoubleSplitComplex out;
+	DSPDoubleSplitComplex in;
+	DSPDoubleSplitComplex out;
 	
-    in.realp = inReal;
-    in.imagp = inImag;
-    out.realp = outReal;
-    out.imagp = outImag;
+	in.realp = inReal;
+	in.imagp = inImag;
+	out.realp = outReal;
+	out.imagp = outImag;
 
-    vDSP_fft_zopD(this->setup, &in, 1, &out, 1, this->log2n, FFT_FORWARD);
+	vDSP_fft_zopD(this->setup, &in, 1, &out, 1, this->log2n, FFT_FORWARD);
 
-    double scale = 2. / this->n;
-    vDSP_vsmulD(outReal, 1, &scale, outReal, 1, this->n);
-    vDSP_vsmulD(outImag, 1, &scale, outImag, 1, this->n);
+	vDSP_vsmulD(outReal, 1, &scale, outReal, 1, this->n);
+	vDSP_vsmulD(outImag, 1, &scale, outImag, 1, this->n);
 #else
-    // TODO
+	for(size_t i = 0; i < this->n; i++) {
+		this->in[i][0] = inReal[i];
+		this->in[i][1] = inImag[i];
+	}
+	fftw_execute(this->forward_out_of_place_plan);
+	for(size_t i = 0; i < this->n; i++) {
+		outReal[i] = this->out[i][0] * scale;
+		outImag[i] = this->out[i][1] * scale;
+	}
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::backward(double *inReal, double *inImag, double *outReal, double *outImag) {
+	double scale = .5;
 #ifdef SAPF_ACCELERATE
-    DSPDoubleSplitComplex in;
-    DSPDoubleSplitComplex out;
+	DSPDoubleSplitComplex in;
+	DSPDoubleSplitComplex out;
 	
-    in.realp = inReal;
-    in.imagp = inImag;
-    out.realp = outReal;
-    out.imagp = outImag;
+	in.realp = inReal;
+	in.imagp = inImag;
+	out.realp = outReal;
+	out.imagp = outImag;
 
-    vDSP_fft_zopD(this->setup, &in, 1, &out, 1, this->log2n, FFT_INVERSE);
+	vDSP_fft_zopD(this->setup, &in, 1, &out, 1, this->log2n, FFT_INVERSE);
 
-    double scale = .5;
-    vDSP_vsmulD(outReal, 1, &scale, outReal, 1, this->n);
-    vDSP_vsmulD(outImag, 1, &scale, outImag, 1, this->n);
+	vDSP_vsmulD(outReal, 1, &scale, outReal, 1, this->n);
+	vDSP_vsmulD(outImag, 1, &scale, outImag, 1, this->n);
 #else
-    // TODO
+	for(size_t i = 0; i < this->n; i++) {
+		this->in[i][0] = inReal[i];
+		this->in[i][1] = inImag[i];
+	}
+	fftw_execute(this->backward_out_of_place_plan);
+	for(size_t i = 0; i < this->n; i++) {
+		outReal[i] = this->out[i][0] * scale;
+		outImag[i] = this->out[i][1] * scale;
+	}
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::forward_in_place(double *ioReal, double *ioImag) {
+	double scale = 2. / this->n;
 #ifdef SAPF_ACCELERATE
-    DSPDoubleSplitComplex io;
+	DSPDoubleSplitComplex io;
 	
-    io.realp = ioReal;
-    io.imagp = ioImag;
+	io.realp = ioReal;
+	io.imagp = ioImag;
 
-    vDSP_fft_zipD(this->setup, &io, 1, this->log2n, FFT_FORWARD);
+	vDSP_fft_zipD(this->setup, &io, 1, this->log2n, FFT_FORWARD);
 
-    double scale = 2. / this->n;
-    vDSP_vsmulD(ioReal, 1, &scale, ioReal, 1, this->n);
-    vDSP_vsmulD(ioImag, 1, &scale, ioImag, 1, this->n);
+	vDSP_vsmulD(ioReal, 1, &scale, ioReal, 1, this->n);
+	vDSP_vsmulD(ioImag, 1, &scale, ioImag, 1, this->n);
 #else
-    // TODO
+	for(size_t i = 0; i < this->n; i++) {
+		this->in[i][0] = ioReal[i];
+		this->in[i][1] = ioImag[i];
+	}
+	fftw_execute(this->forward_in_place_plan);
+	for(size_t i = 0; i < this->n; i++) {
+		ioReal[i] = this->in[i][0] * scale;
+		ioImag[i] = this->in[i][1] * scale;
+	}
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::backward_in_place(double *ioReal, double *ioImag) {
+	double scale = .5;
 #ifdef SAPF_ACCELERATE
-    DSPDoubleSplitComplex io;
+	DSPDoubleSplitComplex io;
 	
-    io.realp = ioReal;
-    io.imagp = ioImag;
+	io.realp = ioReal;
+	io.imagp = ioImag;
 
-    vDSP_fft_zipD(this->setup, &io, 1, this->log2n, FFT_INVERSE);
+	vDSP_fft_zipD(this->setup, &io, 1, this->log2n, FFT_INVERSE);
 
-    double scale = .5;
-    vDSP_vsmulD(ioReal, 1, &scale, ioReal, 1, this->n);
-    vDSP_vsmulD(ioImag, 1, &scale, ioImag, 1, this->n);
+	vDSP_vsmulD(ioReal, 1, &scale, ioReal, 1, this->n);
+	vDSP_vsmulD(ioImag, 1, &scale, ioImag, 1, this->n);
 #else
-    // TODO
+	for(size_t i = 0; i < this->n; i++) {
+		this->in[i][0] = ioReal[i];
+		this->in[i][1] = ioImag[i];
+	}
+	fftw_execute(this->backward_in_place_plan);
+	for(size_t i = 0; i < this->n; i++) {
+		ioReal[i] = this->in[i][0] * scale;
+		ioImag[i] = this->in[i][1] * scale;
+	}
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::forward_real(double *inReal, double *outReal, double *outImag) {
+	double scale = 2. / n;
 #ifdef SAPF_ACCELERATE
-    int n2 = this->n/2;
-    DSPDoubleSplitComplex in;
-    DSPDoubleSplitComplex out;
+	int n2 = this->n/2;
+	DSPDoubleSplitComplex in;
+	DSPDoubleSplitComplex out;
 
-    vDSP_ctozD((DSPDoubleComplex*)inReal, 1, &in, 1, n2);
+	vDSP_ctozD((DSPDoubleComplex*)inReal, 1, &in, 1, n2);
 	
-    out.realp = outReal;
-    out.imagp = outImag;
+	out.realp = outReal;
+	out.imagp = outImag;
 
-    vDSP_fft_zropD(this->setup, &in, 1, &out, 1, this->log2n, FFT_FORWARD);
+	vDSP_fft_zropD(this->setup, &in, 1, &out, 1, this->log2n, FFT_FORWARD);
 
-    double scale = 2. / n;
-    vDSP_vsmulD(outReal, 1, &scale, outReal, 1, n2);
-    vDSP_vsmulD(outImag, 1, &scale, outImag, 1, n2);
+	vDSP_vsmulD(outReal, 1, &scale, outReal, 1, n2);
+	vDSP_vsmulD(outImag, 1, &scale, outImag, 1, n2);
     
-    out.realp[n2] = out.imagp[0];
-    out.imagp[0] = 0.;
-    out.imagp[n2] = 0.;
+	out.realp[n2] = out.imagp[0];
+	out.imagp[0] = 0.;
+	out.imagp[n2] = 0.;
 #else
-    // TODO
+	for(size_t i = 0; i < this->n; i++) {
+		this->in_real[i] = inReal[i];
+	}
+	fftw_execute(this->forward_real_plan);
+	for(size_t i = 0; i < this->n; i++) {
+		outReal[i] = this->out[i][0] * scale;
+		outImag[i] = this->out[i][1] * scale;
+	}
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::backward_real(double *inReal, double *inImag, double *outReal) {
+	double scale = .5;
 #ifdef SAPF_ACCELERATE
-    int n2 = this->n/2;
-    DSPDoubleSplitComplex in;
+	int n2 = this->n/2;
+	DSPDoubleSplitComplex in;
 	
-    in.realp = inReal;
-    in.imagp = inImag;
+	in.realp = inReal;
+	in.imagp = inImag;
 	
-    //in.imagp[0] = in.realp[n2];
-    in.imagp[0] = 0.;
+	//in.imagp[0] = in.realp[n2];
+	in.imagp[0] = 0.;
 
-    vDSP_fft_zripD(this->setup, &in, 1, this->log2n, FFT_INVERSE);
+	vDSP_fft_zripD(this->setup, &in, 1, this->log2n, FFT_INVERSE);
 
-    vDSP_ztocD(&in, 1, (DSPDoubleComplex*)outReal, 2, n2);
+	vDSP_ztocD(&in, 1, (DSPDoubleComplex*)outReal, 2, n2);
 
-    double scale = .5;
-    vDSP_vsmulD(outReal, 1, &scale, outReal, 1, n);    
+	vDSP_vsmulD(outReal, 1, &scale, outReal, 1, n);    
 #else
-    // TODO
+	for(size_t i = 0; i < this->n; i++) {
+		this->in[i][0] = inReal[i];
+		this->in[i][1] = inImag[i];
+	}
+	fftw_execute(this->backward_real_plan);
+	for(size_t i = 0; i < this->n; i++) {
+		outReal[i] = this->out_real[i] * scale;
+	}
 #endif // SAPF_ACCELERATE
 }
 

@@ -45,8 +45,14 @@ private:
 #else
     fftw_complex *in;
     fftw_complex *out;
-    fftw_plan forward_plan;
-    fftw_plan backward_plan;
+    double *in_real;
+    double *out_real;
+    fftw_plan forward_out_of_place_plan;
+    fftw_plan backward_out_of_place_plan;
+    fftw_plan forward_in_place_plan;
+    fftw_plan backward_in_place_plan;
+    fftw_plan forward_real_plan;
+    fftw_plan backward_real_plan;
 #endif // SAPF_ACCELERATE    
 };
 
