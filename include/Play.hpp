@@ -16,8 +16,8 @@
 
 #include "VM.hpp"
 
-void playWithAudioUnit(Thread& th, V& v);
-void recordWithAudioUnit(Thread& th, V& v, Arg filename);
+void playWithPlayer(Thread& th, V& v);
+void recordWithPlayer(Thread& th, V& v, Arg filename);
 
 void stopPlaying();
 void stopPlayingIfDone();

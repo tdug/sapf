@@ -5485,14 +5485,14 @@ static void longas0_(Thread& th, Prim* prim)
 static void play_(Thread& th, Prim* prim)
 {
 	V v = th.popList("play : list");
-	playWithAudioUnit(th, v);
+	playWithPlayer(th, v);
 }
 
 static void record_(Thread& th, Prim* prim)
 {
 	V filename = th.pop();
 	V v = th.popList("record : list");
-	recordWithAudioUnit(th, v, filename);
+	recordWithPlayer(th, v, filename);
 }
 
 static void stop_(Thread& th, Prim* prim)
