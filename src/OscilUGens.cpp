@@ -114,7 +114,8 @@ static void fillWaveTable(int n, Z* amps, int ampStride, Z* phases, int phaseStr
 		amps += ampStride;
 		phases += phaseStride;
 	}
-	
+
+	// convert polar to rectangular
 #ifdef SAPF_ACCELERATE
 	DSPDoubleSplitComplex in;
 	in.realp = real;
@@ -124,7 +125,12 @@ static void fillWaveTable(int n, Z* amps, int ampStride, Z* phases, int phaseStr
 	vDSP_rectD(polar, 2, rect, 2, kWaveTableSize2);
 	vDSP_ctozD((DSPDoubleComplex*)rect, 2, &in, 1, kWaveTableSize2);
 #else
-        // TODO
+        for(size_t i = 0; i < kWaveTableSize2; i++) {
+		Z radius = real[i];
+		Z angle = imag[i];
+		real[i] = radius * cos(angle);
+		imag[i] = radius * sin(angle);
+	}
 #endif // SAPF_ACCELERATE
 	rifft(kWaveTableSize, real, imag, table);
 }

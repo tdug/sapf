@@ -45,8 +45,7 @@ private:
 #else
     fftw_complex *in;
     fftw_complex *out;
-    double *in_real;
-    double *out_real;
+    double *in_out_real;
     fftw_plan forward_out_of_place_plan;
     fftw_plan backward_out_of_place_plan;
     fftw_plan forward_in_place_plan;

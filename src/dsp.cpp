@@ -26,17 +26,25 @@ void FFT::init(size_t log2n) {
 #ifdef SAPF_ACCELERATE
 	this->setup = vDSP_create_fftsetupD(this->log2n, kFFTRadix2);
 #else
-	this->in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * this->n);
-	this->out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * this->n);
-	this->in_real = (double *) fftw_malloc(sizeof(double) * this->n);
-	this->out_real = (double *) fftw_malloc(sizeof(double) * this->n);
+	this->in = (fftw_complex *) fftw_malloc(this->n * sizeof(fftw_complex));
+	this->out = (fftw_complex *) fftw_malloc(this->n * sizeof(fftw_complex));
+	// "Here, n is the “logical” size of the DFT, not necessarily the
+	// physical size of the array. In particular, the real (double) array
+	// has n elements, while the complex (fftw_complex) array has n/2+1
+	// elements (where the division is rounded down). For an in-place
+	// transform, in and out are aliased to the same array, which must be
+	// big enough to hold both; so, the real array would actually have
+	// 2*(n/2+1) elements, where the elements beyond the first n are unused
+	// padding."
+	// - https://fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html
+	this->in_out_real = (double *) fftw_malloc(2 * (this->n / 2 + 1) * sizeof(double));
 	
 	this->forward_out_of_place_plan = fftw_plan_dft_1d(this->n, this->in, this->out, FFTW_FORWARD, FFTW_ESTIMATE);
 	this->backward_out_of_place_plan = fftw_plan_dft_1d(this->n, this->in, this->out, FFTW_BACKWARD, FFTW_ESTIMATE);
 	this->forward_in_place_plan = fftw_plan_dft_1d(this->n, this->in, this->in, FFTW_FORWARD, FFTW_ESTIMATE);
 	this->backward_in_place_plan = fftw_plan_dft_1d(this->n, this->in, this->in, FFTW_BACKWARD, FFTW_ESTIMATE);
-	this->forward_real_plan = fftw_plan_dft_r2c_1d(this->n, this->in_real, this->out, FFTW_ESTIMATE);
-	this->backward_real_plan = fftw_plan_dft_c2r_1d(this->n, this->in, this->out_real, FFTW_ESTIMATE);
+	this->forward_real_plan = fftw_plan_dft_r2c_1d(this->n, this->in_out_real, (fftw_complex *) this->in_out_real, FFTW_ESTIMATE);
+	this->backward_real_plan = fftw_plan_dft_c2r_1d(this->n, (fftw_complex *) this->in_out_real, this->in_out_real, FFTW_ESTIMATE);
 #endif // SAPF_ACCELERATE
 }
 
@@ -53,8 +61,7 @@ FFT::~FFT() {
 	
 	fftw_free(this->in);
 	fftw_free(this->out);
-	fftw_free(this->in_real);
-	fftw_free(this->out_real);
+	fftw_free(this->in_out_real);
 #endif // SAPF_ACCELERATE
 }
 
@@ -166,8 +173,8 @@ void FFT::backward_in_place(double *ioReal, double *ioImag) {
 
 void FFT::forward_real(double *inReal, double *outReal, double *outImag) {
 	double scale = 2. / n;
-#ifdef SAPF_ACCELERATE
 	int n2 = this->n/2;
+#ifdef SAPF_ACCELERATE
 	DSPDoubleSplitComplex in;
 	DSPDoubleSplitComplex out;
 
@@ -186,20 +193,20 @@ void FFT::forward_real(double *inReal, double *outReal, double *outImag) {
 	out.imagp[n2] = 0.;
 #else
 	for(size_t i = 0; i < this->n; i++) {
-		this->in_real[i] = inReal[i];
+		this->in_out_real[i] = inReal[i];
 	}
 	fftw_execute(this->forward_real_plan);
-	for(size_t i = 0; i < this->n; i++) {
-		outReal[i] = this->out[i][0] * scale;
-		outImag[i] = this->out[i][1] * scale;
+	for(size_t i = 0; i < n2; i++) {
+		outReal[i] = this->in_out_real[2*i] * scale;
+		outImag[i] = this->in_out_real[2*i+1] * scale;
 	}
 #endif // SAPF_ACCELERATE
 }
 
 void FFT::backward_real(double *inReal, double *inImag, double *outReal) {
 	double scale = .5;
-#ifdef SAPF_ACCELERATE
 	int n2 = this->n/2;
+#ifdef SAPF_ACCELERATE
 	DSPDoubleSplitComplex in;
 	
 	in.realp = inReal;
@@ -214,13 +221,13 @@ void FFT::backward_real(double *inReal, double *inImag, double *outReal) {
 
 	vDSP_vsmulD(outReal, 1, &scale, outReal, 1, n);    
 #else
-	for(size_t i = 0; i < this->n; i++) {
-		this->in[i][0] = inReal[i];
-		this->in[i][1] = inImag[i];
+	for(size_t i = 0; i < n2; i++) {
+		this->in_out_real[2*i] = inReal[i];
+		this->in_out_real[2*i+1] = inImag[i];
 	}
 	fftw_execute(this->backward_real_plan);
 	for(size_t i = 0; i < this->n; i++) {
-		outReal[i] = this->out_real[i] * scale;
+		outReal[i] = this->in_out_real[i] * scale;
 	}
 #endif // SAPF_ACCELERATE
 }
