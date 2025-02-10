@@ -17,8 +17,8 @@
 #include "Play.hpp"
 #if defined(SAPF_AUDIOTOOLBOX)
 #include <AudioToolbox/AudioToolbox.h>
-#else)
-#include <RtAudio.h>
+#else
+#include SAPF_RTAUDIO_H
 #endif
 #include <pthread.h>
 #include <atomic>
