@@ -5,48 +5,55 @@ project(
 )
 
 cpp = meson.get_compiler('cpp')
-
-cpp_args = ['-fblocks']
-link_args = ['-lfftw3', '-lBlocksRuntime', '-ldispatch', '-ledit']
 deps = []
+cpp_args = []
+link_args = []
+
+# libdispatch
+cpp_args += ['-fblocks']
+link_args += ['-lBlocksRuntime', '-ldispatch']
+
+# libedit
+deps += dependency('libedit', required: true)
 
 if get_option('asan')
   cpp_args += ['-fsanitize=address', '-O1', '-fno-omit-frame-pointer', '-g']
   link_args += ['-fsanitize=address']
 endif
 
-if cpp.has_header('Accelerate/Accelerate.h')
+if get_option('accelerate')
   add_project_arguments('-DSAPF_ACCELERATE', language: 'cpp')
+else
+  deps += dependency('fftw3', required: true, version: '>=3')
 endif
 
-if cpp.has_header('os/lock.h')
+if get_option('apple_lock')
   add_project_arguments('-DSAPF_APPLE_LOCK', language: 'cpp')
 endif
 
-if cpp.has_header('AudioToolbox/AudioToolbox.h')
+if get_option('audiotoolbox')
   add_project_arguments('-DSAPF_AUDIOTOOLBOX', language: 'cpp')
 else
-  rtaudio_dep = dependency('rtaudio', required: true, version: '>=6')
-  deps += rtaudio_dep
+  deps += dependency('rtaudio', required: true, version: '>=6')
 endif
 
-if cpp.has_header('Carbon/Carbon.h')
+if get_option('carbon')
   add_project_arguments('-DSAPF_CARBON', language: 'cpp')
 endif
 
-if cpp.has_header('Cocoa/Cocoa.h')
+if get_option('cocoa')
   add_project_arguments('-DSAPF_COCOA', language: 'cpp')
 endif
 
-if cpp.has_header('CoreFoundation/CoreFoundation.h')
+if get_option('corefoundation')
   add_project_arguments('-DSAPF_COREFOUNDATION', language: 'cpp')
 endif
 
-if cpp.has_header('CoreMidi/CoreMidi.h')
+if get_option('coremidi')
   add_project_arguments('-DSAPF_COREMIDI', language: 'cpp')
 endif
 
-if cpp.has_header('mach/mach_time.h')
+if get_option('mach_time')
   add_project_arguments('-DSAPF_MACH_TIME', language: 'cpp')
 endif
 
