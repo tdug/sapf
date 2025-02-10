@@ -6,7 +6,7 @@ project(
 
 cpp = meson.get_compiler('cpp')
 deps = []
-cpp_args = []
+cpp_args = ['-std=c++17']
 link_args = []
 
 # libdispatch
