@@ -2,7 +2,7 @@ sudo apt update
 
 sudo apt install -y \
   clang \
-  libstdc++-dev \
+  libstdc++-14-dev \
   meson \
   ninja-build \
   libedit-dev \
