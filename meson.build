@@ -60,6 +60,10 @@ if get_option('mach_time')
   add_project_arguments('-DSAPF_MACH_TIME', language: 'cpp')
 endif
 
+if get_option('manta')
+  add_project_arguments('-DSAPF_MANTA', language: 'cpp')
+endif
+
 sources = [
   'src/CoreOps.cpp',
   'src/DelayUGens.cpp',
