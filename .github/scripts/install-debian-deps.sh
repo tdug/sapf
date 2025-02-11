@@ -2,7 +2,7 @@ sudo apt update
 
 sudo apt install -y \
   build-essential \
-  libstdc++-14-dev \
+  gobjc \
   meson \
   ninja-build \
   libedit-dev \
