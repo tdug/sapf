@@ -1,7 +1,7 @@
 sudo apt update
 
 sudo apt install -y \
-  build-essential \
+  clang \
   meson \
   ninja-build \
   libedit-dev \
