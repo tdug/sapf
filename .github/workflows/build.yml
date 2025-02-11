@@ -25,8 +25,12 @@ jobs:
       if: runner.os == 'macOS'
       run: .github/scripts/install-macos-deps.sh
 
-    - name: Build
+    - name: Setup
       run: CC=clang CXX=clang++ meson setup build
 
     - name: Compile
       run: CC=clang CXX=clang++ meson compile -C build
+
+    - name: Print meson log
+      if: ${{ always() }}
+      run: cat build/meson-logs/meson-log.txt
