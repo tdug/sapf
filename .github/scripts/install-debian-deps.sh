@@ -1,6 +1,7 @@
 sudo apt update
 
 sudo apt install -y \
+  build-essential \
   clang \
   libstdc++-14-dev \
   meson \
