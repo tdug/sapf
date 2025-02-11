@@ -1,0 +1,32 @@
+name: Compile
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Linux Dependencies
+      if: runner.os == 'Linux'
+      run: .github/scripts/install-debian-deps.sh
+
+    - name: Install macOS Dependencies
+      if: runner.os == 'macOS'
+      run: .github/scripts/install-macos-deps.sh
+
+    - name: Build
+      run: CC=clang CXX=clang++ meson setup build
+
+    - name: Compile
+      run: CC=clang CXX=clang++ meson compile -C build
