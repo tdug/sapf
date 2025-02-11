@@ -30,7 +30,7 @@ endif
 if get_option('audiotoolbox')
   add_project_arguments('-DSAPF_AUDIOTOOLBOX', language: 'cpp')
 else
-  deps += dependency('rtaudio', required: true, version: '>=6')
+  deps += dependency('rtaudio', required: true, version: '>=5.2')
   if not cpp.has_header('RtAudio.h') and cpp.has_header('rtaudio/RtAudio.h')
     add_project_arguments('-DSAPF_RTAUDIO_H=<rtaudio/RtAudio.h>', language: 'cpp')
   endif
