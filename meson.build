@@ -9,10 +9,6 @@ deps = []
 cpp_args = ['-std=c++17']
 link_args = []
 
-# libdispatch
-cpp_args += ['-fblocks']
-link_args += ['-lBlocksRuntime', '-ldispatch']
-
 # libedit
 deps += dependency('libedit', required: true)
 
@@ -54,6 +50,12 @@ endif
 
 if get_option('coremidi')
   add_project_arguments('-DSAPF_COREMIDI', language: 'cpp')
+endif
+
+if get_option('dispatch')
+  cpp_args += ['-fblocks']
+  link_args += ['-lBlocksRuntime', '-ldispatch']
+  add_project_arguments('-DSAPF_DISPATCH', language: 'cpp')
 endif
 
 if get_option('mach_time')

@@ -21,7 +21,11 @@
 #include <sys/stat.h>
 #include "primes.hpp"
 #include <complex>
+#ifdef SAPF_DISPATCH
 #include <dispatch/dispatch.h>
+#else
+#include <thread>
+#endif // SAPF_DISPATCH
 #ifdef SAPF_COREFOUNDATION
 #include <CoreFoundation/CoreFoundation.h>
 #endif // SAPF_COREFOUNDATION
@@ -56,6 +60,18 @@ Manta* manta()
 {
 	static MyManta* sManta = new MyManta();
 	return sManta;
+}
+
+static void mantaLoop() {
+	/*** see at bottom for better way ***/
+	while(true) {
+		try {
+			MantaUSB::HandleEvents();
+			usleep(5000);
+		} catch(...) {
+			sleep(1);
+		}
+	}
 }
 #endif // SAPF_MANTA
 
@@ -109,6 +125,11 @@ static void usage()
 	fprintf(stdout, "sapf [-h]\n");
 	fprintf(stdout, "    print this help\n");
 	fprintf(stdout, "\n");	
+}
+
+static void replLoop(Thread th) {
+	th.repl(stdin, vm.log_file);
+	exit(0);
 }
 
 int main (int argc, const char * argv[]) 
@@ -174,7 +195,10 @@ int main (int argc, const char * argv[])
 		vm.log_file = strdup(logfilename);
 	}
 
-	__block Thread th;
+#ifdef SAPF_DISPATCH
+	__block
+#endif
+	Thread th;
 
 #ifdef SAPF_MANTA
 	auto m = manta();
@@ -184,17 +208,15 @@ int main (int argc, const char * argv[])
 	}
 	printf("Manta %s connected.\n", m->IsConnected() ? "is" : "IS NOT");
 
+#ifdef SAPF_DISPATCH
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		/*** see at bottom for better way ***/
-		while(true) {
-			try {
-				MantaUSB::HandleEvents();
-				usleep(5000);
-			} catch(...) {
-				sleep(1);
-			}
-		}
+		mantaLoop();
 	});
+#else
+	std::thread mantaThread([&]() {
+		mantaLoop();
+	});
+#endif // SAPF_DISPATCH
 #endif // SAPF_MANTA
 	
 	if (!vm.prelude_file) {
@@ -204,21 +226,27 @@ int main (int argc, const char * argv[])
 		loadFile(th, vm.prelude_file);
 	}
 
+#ifdef SAPF_DISPATCH
 #ifdef SAPF_COREFOUNDATION
         // TODO does dispatch_async + CFRunLoopRun have any benefit over dispatch_sync?
 	dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		th.repl(stdin, vm.log_file);
-		exit(0);
+		replLoop(th);
 	});
         
 	CFRunLoopRun();
 #else
 	dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		th.repl(stdin, vm.log_file);
-		exit(0);
+		replLoop(th);
 	});
-#endif
-	
+#endif // SAPF_COREFOUNDATION
+#else
+	std::thread replThread([&]() {
+		replLoop(th);
+	});
+
+	replThread.join();
+#endif // SAPF_DISPATCH
+
 	return 0;
 }
 
