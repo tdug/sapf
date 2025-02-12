@@ -25,12 +25,12 @@
             inherit system;
             overlays = [self.overlays.default];
           };
-          stdenv = (llvmPackages pkgs).stdenv;
+          # stdenv = (llvmPackages pkgs).stdenv;
         in rec {
           # packages.default = pkgs.sapf;
 
           devShell = pkgs.mkShell.override {
-            inherit stdenv;
+            # inherit stdenv;
           } {
             buildInputs = with pkgs; [
               fftw
@@ -42,8 +42,8 @@
               rtaudio_6
             ];
 
-            CC = "${stdenv}/bin/clang";
-            CXX = "${stdenv}/bin/clang++";
+            # CC = "${stdenv}/bin/clang";
+            # CXX = "${stdenv}/bin/clang++";
           };
         }
       ));

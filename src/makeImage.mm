@@ -15,7 +15,6 @@
 //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #import "makeImage.hpp"
-#ifdef SAPF_COCOA
 #import <Cocoa/Cocoa.h>
 
 struct Bitmap
@@ -24,13 +23,9 @@ struct Bitmap
 	unsigned char* data;
 	int bytesPerRow;
 };
-#else
-// TODO cross platform image creation
-#endif // SAPF_COCOA
 
 Bitmap* createBitmap(int width, int height)
 {
-#ifdef SAPF_COCOA
 	Bitmap* bitmap = (Bitmap*)calloc(1, sizeof(Bitmap));
 	bitmap->rep = 
 			[[NSBitmapImageRep alloc] 
@@ -50,14 +45,10 @@ Bitmap* createBitmap(int width, int height)
 	bitmap->data = [bitmap->rep bitmapData];
 	bitmap->bytesPerRow = (int)[bitmap->rep bytesPerRow];
 	return bitmap;
-#else
-        // TODO cross platform image creation
-#endif // SAPF_COCOA
 }
 
 void setPixel(Bitmap* bitmap, int x, int y, int r, int g, int b, int a)
 {
-#ifdef SAPF_COCOA
 	size_t index = bitmap->bytesPerRow * y + 4 * x;
 	unsigned char* data = bitmap->data;
 	
@@ -65,14 +56,10 @@ void setPixel(Bitmap* bitmap, int x, int y, int r, int g, int b, int a)
 	data[index+1] = g;
 	data[index+2] = b;
 	data[index+3] = a;
-#else
-        // TODO cross platform image creation
-#endif // SAPF_COCOA
 }
 
 void fillRect(Bitmap* bitmap, int x, int y, int width, int height, int r, int g, int b, int a)
 {
-#ifdef SAPF_COCOA
 	unsigned char* data = bitmap->data;
 	for (int j = y; j < y + height; ++j) {
 		size_t index = bitmap->bytesPerRow * j + 4 * x;
@@ -84,33 +71,22 @@ void fillRect(Bitmap* bitmap, int x, int y, int width, int height, int r, int g,
 			index += 4;
 		}
 	}
-#else
-        // TODO cross platform image creation
-#endif // SAPF_COCOA
 }
 
 void writeBitmap(Bitmap* bitmap, const char *path)
 {
-#ifdef SAPF_COCOA
 	//NSData* data = [bitmap->rep TIFFRepresentation];
 	//NSDictionary* properties = @{ NSImageCompressionFactor: @.9 };
 	NSDictionary* properties = nullptr;
 	NSData* data = [bitmap->rep representationUsingType: NSJPEGFileType properties: properties];
 	NSString* nsstr = [NSString stringWithUTF8String: path];
 	[data writeToFile: nsstr atomically: YES];
-#else
-        // TODO cross platform image creation
-#endif // SAPF_COCOA
 }
 
 void freeBitmap(Bitmap* bitmap)
 {
-#ifdef SAPF_COCOA
 	//[bitmap->rep release];
 	free(bitmap);
-#else
-        // TODO cross platform image creation
-#endif // SAPF_COCOA
 }
 
 

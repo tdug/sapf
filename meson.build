@@ -1,10 +1,39 @@
 project(
   'sapf',
-  ['cpp', 'objcpp'],
+  ['cpp'],
   meson_version : '>=1.1'
 )
 
 cpp = meson.get_compiler('cpp')
+sources = [
+  'src/CoreOps.cpp',
+  'src/DelayUGens.cpp',
+  'src/dsp.cpp',
+  'src/elapsedTime.cpp',
+  'src/ErrorCodes.cpp',
+  'src/FilterUGens.cpp',
+  'src/main.cpp',
+  'src/MathFuns.cpp',
+  'src/MathOps.cpp',
+  'src/Midi.cpp',
+  'src/MultichannelExpansion.cpp',
+  'src/Object.cpp',
+  'src/Opcode.cpp',
+  'src/OscilUGens.cpp',
+  'src/Parser.cpp',
+  'src/Play.cpp',
+  'src/primes.cpp',
+  'src/RCObj.cpp',
+  'src/RandomOps.cpp',
+  'src/SetOps.cpp',
+  'src/SoundFiles.cpp',
+  'src/Spectrogram.cpp',
+  'src/StreamOps.cpp',
+  'src/symbol.cpp',
+  'src/Types.cpp',
+  'src/UGen.cpp',
+  'src/VM.cpp',
+]
 deps = []
 cpp_args = ['-std=c++17']
 link_args = []
@@ -42,6 +71,10 @@ endif
 
 if get_option('cocoa')
   add_project_arguments('-DSAPF_COCOA', language: 'cpp')
+  sources += 'src/makeImage.mm'
+  add_languages('objcpp', required : true)
+else
+  sources += 'src/makeImage.cpp'
 endif
 
 if get_option('corefoundation')
@@ -65,37 +98,6 @@ endif
 if get_option('manta')
   add_project_arguments('-DSAPF_MANTA', language: 'cpp')
 endif
-
-sources = [
-  'src/CoreOps.cpp',
-  'src/DelayUGens.cpp',
-  'src/dsp.cpp',
-  'src/elapsedTime.cpp',
-  'src/ErrorCodes.cpp',
-  'src/FilterUGens.cpp',
-  'src/main.cpp',
-  'src/makeImage.mm',
-  'src/MathFuns.cpp',
-  'src/MathOps.cpp',
-  'src/Midi.cpp',
-  'src/MultichannelExpansion.cpp',
-  'src/Object.cpp',
-  'src/Opcode.cpp',
-  'src/OscilUGens.cpp',
-  'src/Parser.cpp',
-  'src/Play.cpp',
-  'src/primes.cpp',
-  'src/RCObj.cpp',
-  'src/RandomOps.cpp',
-  'src/SetOps.cpp',
-  'src/SoundFiles.cpp',
-  'src/Spectrogram.cpp',
-  'src/StreamOps.cpp',
-  'src/symbol.cpp',
-  'src/Types.cpp',
-  'src/UGen.cpp',
-  'src/VM.cpp',
-]
 
 executable(
   'sapf',
