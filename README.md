@@ -21,3 +21,8 @@ if not using Nix, you will need to install dependencies manually instead of the 
 - libedit
 - fftw
 - rtaudio
+
+for installing dependencies, you can refer to the CI scripts in this repo:
+
+- [install-debian-deps.sh](.github/scripts/install-debian-deps.sh) (Debian, Ubuntu, Mint, etc.)
+- [install-macos-deps.sh](.github/scripts/install-macos-deps.sh) (macOS with Homebrew)
