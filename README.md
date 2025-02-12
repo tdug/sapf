@@ -16,9 +16,8 @@ meson compile -C build
 
 and you should get a binary at `./build/sapf`.
 
-if not using Nix, you will need to install dependencies manually and probably specify Clang as the compiler:
+if not using Nix, you will need to install dependencies manually instead of the `nix develop`. the mandatory dependencies for a portable build are currently:
 
-```shell
-CC=clang CXX=clang++ meson setup build
-CC=clang CXX=clang++ meson compile -C build
-```
+- libedit
+- fftw
+- rtaudio
