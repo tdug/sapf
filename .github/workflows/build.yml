@@ -31,6 +31,9 @@ jobs:
     - name: Compile
       run: meson compile -C build
 
-    - name: Print meson log
+    - name: Save Build Log Artifact
       if: ${{ always() }}
-      run: cat build/meson-logs/meson-log.txt
+      uses: actions/upload-artifact@v4
+      with:
+        name: meson-build-log-${{ runner.os }}.txt
+        path: build/meson-logs/meson-log.txt
