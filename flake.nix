@@ -34,9 +34,8 @@
           } {
             buildInputs = with pkgs; [
               fftw
-              libdispatch
-              libedit
               (llvmPackages pkgs).lldb
+              libedit
               meson
               ninja
               pkg-config
