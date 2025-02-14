@@ -36,6 +36,7 @@
               fftw
               (llvmPackages pkgs).lldb
               libedit
+              libsndfile
               meson
               ninja
               pkg-config

@@ -63,6 +63,8 @@ else
   if not cpp.has_header('RtAudio.h') and cpp.has_header('rtaudio/RtAudio.h')
     add_project_arguments('-DSAPF_RTAUDIO_H=<rtaudio/RtAudio.h>', language: 'cpp')
   endif
+
+  deps += dependency('sndfile', required: true)
 endif
 
 if get_option('carbon')
