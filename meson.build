@@ -6,6 +6,8 @@ project(
 
 cpp = meson.get_compiler('cpp')
 sources = [
+  'src/AudioToolboxBuffers.cpp',
+  'src/AudioToolboxSoundFile.cpp',
   'src/CoreOps.cpp',
   'src/DelayUGens.cpp',
   'src/dsp.cpp',
@@ -22,10 +24,12 @@ sources = [
   'src/OscilUGens.cpp',
   'src/Parser.cpp',
   'src/Play.cpp',
+  'src/PortableBuffers.cpp',
   'src/primes.cpp',
   'src/RCObj.cpp',
   'src/RandomOps.cpp',
   'src/SetOps.cpp',
+  'src/SndfileSoundFile.cpp',
   'src/SoundFiles.cpp',
   'src/Spectrogram.cpp',
   'src/StreamOps.cpp',

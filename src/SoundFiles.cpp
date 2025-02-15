@@ -19,227 +19,11 @@
 
 extern char gSessionTime[256];
 
-#ifdef SAPF_AUDIOTOOLBOX
-class AudioToolboxBuffers {
-public:
-	AudioToolboxBuffers(int inNumChannels) {
-		this->abl = (AudioBufferList*)calloc(1, sizeof(AudioBufferList) + (inNumChannels - 1) * sizeof(AudioBuffer));
-		this->abl->mNumChannels = inNumChannels;
-	}
-
-	~AudioToolboxBuffers() {
-		free(this->abl);
-	}
-
-	uint32_t numChannels() {
-		return this->abl->mNumChannels;
-	}
-
-	void setData(size_t i, Z *data, uint32_t blockSize) {
-		AudioBuffer buf = this->abl[i];
-		buf.mNumberChannels = 1;
-		buf.mData = data;
-		buf.mDataByteSize = blockSize * sizeof(Z);
-	}
-	
-	AudioBufferList *abl;
-};
-
-typedef AudioToolboxBuffers AudioBuffers;
-
-class AudioToolboxSFReaderBackend {
-public:
-	AudioToolboxSFReaderBackend(ExtAudioFileRef inXAF, uint32_t inNumChannels)
-		: mXAF(inXAF), mNumChannels(inNumChannels)
-	{}
-
-	~AudioToolboxSFReaderBackend() {
-		ExtAudioFileDispose(this->mXAF);
-	}
-
-	uint32_t numChannels() {
-		return this->mNumChannels;
-	}
-
-	int pull(uint32_t *framesRead, AudioBuffers& buffers) {
-		return ExtAudioFileRead(this->mXAF, framesRead, buffers.abl);
-	}
-	
-	ExtAudioFileRef mXAF;
-	uint32_t mNumChannels;
-
-	static AudioToolboxSFReaderBackend *openForReading(const char *path) {
-		CFStringRef cfpath = CFStringCreateWithFileSystemRepresentation(0, path);
-		if (!cfpath) {
-			post("failed to create path\n");
-			return nullptr;
-		}
-		CFReleaser cfpathReleaser(cfpath);
-	
-		CFURLRef url = CFURLCreateWithFileSystemPath(0, cfpath, kCFURLPOSIXPathStyle, false);
-		if (!url) {
-			post("failed to create url\n");
-			return nullptr;
-		}
-		CFReleaser urlReleaser(url);
-	
-		ExtAudioFileRef xaf;
-		OSStatus err = ExtAudioFileOpenURL(url, &xaf);
-
-		cfpathReleaser.release();
-		urlReleaser.release();
-        
-		if (err) {
-			post("failed to open file %d\n", (int)err);
-			return nullptr;
-		}
-
-		AudioStreamBasicDescription fileFormat;
-	
-		UInt32 propSize = sizeof(fileFormat);
-		err = ExtAudioFileGetProperty(xaf, kExtAudioFileProperty_FileDataFormat, &propSize, &fileFormat);
-	
-		int numChannels = fileFormat.mChannelsPerFrame;
-
-		AudioStreamBasicDescription clientFormat = {
-			th.rate.sampleRate,
-			kAudioFormatLinearPCM,
-			kAudioFormatFlagsNativeFloatPacked | kAudioFormatFlagIsNonInterleaved,
-			static_cast<UInt32>(sizeof(double)),
-			1,
-			static_cast<UInt32>(sizeof(double)),
-			static_cast<UInt32>(numChannels),
-			64,
-			0
-		};
-	
-		err = ExtAudioFileSetProperty(xaf, kExtAudioFileProperty_ClientDataFormat, sizeof(clientFormat), &clientFormat);
-		if (err) {
-			post("failed to set client data format\n");
-			ExtAudioFileDispose(xaf);
-			return {};
-		}
-	
-		err = ExtAudioFileSeek(xaf, offset);
-		if (err) {
-			post("seek failed %d\n", (int)err);
-			ExtAudioFileDispose(xaf);
-			return {};
-		}
-
-		return new AudioToolboxSFReaderBackend(backend(xaf, numChannels));
-	}	
-};
-
-typedef AudioToolboxSFReaderBackend SFReaderBackend;
-#else
-struct PortableBuffer {
-	uint32_t numChannels;
-	uint32_t size;
-	void *data;
-
-	PortableBuffer()
-		: numChannels(0), size(0), data(nullptr)
-	{}
-};
-
-class PortableBuffers {
-public:
-	PortableBuffers(int inNumChannels)
-		: buffers(inNumChannels)
-	{}
-
-	~PortableBuffers() {}
-
-	uint32_t numChannels() {
-		return this->buffers.size();
-	}
-
-	void setData(size_t i, Z *data, uint32_t blockSize) {
-		PortableBuffer& buf = this->buffers[i];
-		buf.numChannels = 1;
-		buf.size = blockSize * sizeof(Z);
-		buf.data = data;
-		interleaved.resize(blockSize * this->numChannels());
-	}
-
-	std::vector<PortableBuffer> buffers;
-	std::vector<double> interleaved;
-};
-
-typedef PortableBuffers AudioBuffers;
-
-class SndfileSFReaderBackend {
-public:
-	SndfileSFReaderBackend(SNDFILE *inSndfile, int inNumChannels)
-		: mSndfile(inSndfile), mNumChannels(inNumChannels)
-	{}
-	
-	~SndfileSFReaderBackend() {
-		sf_close(this->mSndfile);
-	}
-
-	uint32_t numChannels() {
-		return this->mNumChannels;
-	}
-
-	int pull(uint32_t *framesRead, AudioBuffers& buffers) {
-		buffers.interleaved.resize(*framesRead * this->mNumChannels);
-		sf_count_t framesReallyRead = sf_readf_double(this->mSndfile, buffers.interleaved.data(), *framesRead);
-
-		int result = 0;
-		if(framesReallyRead >= 0) {
-			*framesRead = framesReallyRead;
-		} else {
-			*framesRead = 0;
-			result = framesReallyRead;
-		}
-
-		for(int ch = 0; ch < this->mNumChannels; ch++) {
-			double *buf = (double *) buffers.buffers[ch].data;
-			for(sf_count_t frame = 0; frame < framesReallyRead; frame++) {
-				buf[frame] = buffers.interleaved.data()[frame * this->mNumChannels + ch];
-			}
-		}
-		
-		return result;
-	}
-	
-	SNDFILE *mSndfile;
-	std::vector<double> mBufInterleaved;
-	int mNumChannels;
-
-	static SndfileSFReaderBackend *openForReading(const char *path) {
-		SNDFILE *sndfile = nullptr;
-		SF_INFO sfinfo = {0};
-		
-		if((sndfile = sf_open(path, SFM_READ, &sfinfo)) == nullptr) {
-			post("failed to open file %s\n", sf_strerror(NULL));
-			sf_close(sndfile);
-			return nullptr;
-		}
-
-		uint32_t numChannels = sfinfo.channels;
-
-		sf_count_t seek_result;
-		if((seek_result = sf_seek(sndfile, 0, SEEK_SET) < 0)) {
-			post("failed to seek file %d\n", seek_result);
-			sf_close(sndfile);
-			return nullptr;
-		}
-		
-		return new SndfileSFReaderBackend(sndfile, numChannels);
-	}
-};
-
-typedef SndfileSFReaderBackend SFReaderBackend;
-#endif // SAPF_AUDIOTOOLBOX
-
 class SFReaderOutputChannel;
 
 class SFReader : public Object
 {
-	SFReaderBackend *mBackend;
+	std::unique_ptr<SoundFile> mSoundFile;
 	AudioBuffers mBuffers;
 	SFReaderOutputChannel* mOutputs;
 	int64_t mFramesRemaining;
@@ -247,7 +31,7 @@ class SFReader : public Object
 	
 public:
 	
-	SFReader(SFReaderBackend *inBackend, int64_t inDuration);
+	SFReader(std::unique_ptr<SoundFile> inSoundFile, int64_t inDuration);
 	
 	~SFReader();
 
@@ -295,8 +79,10 @@ public:
 	
 };
 
-SFReader::SFReader(SFReaderBackend *inBackend, int64_t inDuration)
-	: mBackend(inBackend), mBuffers(inBackend->numChannels()), mFramesRemaining(inDuration)
+SFReader::SFReader(std::unique_ptr<SoundFile> inSoundFile, int64_t inDuration) :
+	mSoundFile(std::move(inSoundFile)),
+	mBuffers(mSoundFile->numChannels()),
+	mFramesRemaining(inDuration)
 {
 	
 }
@@ -309,7 +95,6 @@ SFReader::~SFReader()
 		delete output;
 		output = next;
 	} while (output);
-	delete mBackend;
 }
 
 void SFReader::fulfillOutputs(int blockSize)
@@ -327,7 +112,10 @@ void SFReader::fulfillOutputs(int blockSize)
 			out = output->mDummy;
 		}
 
-		this->mBuffers.setData(i, out, blockSize);
+		this->mBuffers.setNumChannels(i, 1);
+		this->mBuffers.setData(i, out);
+		this->mBuffers.setSize(i, bufSize);
+		
 		memset(out, 0, bufSize);
 	};
 }
@@ -344,7 +132,7 @@ void SFReader::produceOutputs(int shrinkBy)
 
 P<List> SFReader::createOutputs(Thread& th)
 {
-	const uint32_t numChannels = mBackend->numChannels();
+	const uint32_t numChannels = mSoundFile->numChannels();
 	P<List> s = new List(itemTypeV, numChannels);
 	
 	// fill s->mArray with ola's output channels.
@@ -378,7 +166,7 @@ bool SFReader::pull(Thread& th)
 	
 	// read file here.
 	uint32_t framesRead = blockSize;
-	int err = mBackend->pull(&framesRead, mBuffers);
+	int err = mSoundFile->pull(&framesRead, mBuffers);
 		
 	if (err || framesRead == 0) {
 		mFinished = true;
@@ -394,81 +182,17 @@ void sfread(Thread& th, Arg filename, int64_t offset, int64_t frames)
 {
 	const char* path = ((String*)filename.o())->s;
 
-	SFReaderBackend *backend = SFReaderBackend::openForReading(path);
+	std::unique_ptr<SoundFile> soundFile = SoundFile::open(path);
 
-	if(backend != nullptr) {
-		SFReader* sfr = new SFReader(backend, -1);
+	if(soundFile != nullptr) {
+		SFReader* sfr = new SFReader(std::move(soundFile), -1);
 		th.push(sfr->createOutputs(th));
 	}
 }
 
-SoundFile sfcreate(Thread& th, const char* path, int numChannels, double fileSampleRate, bool interleaved)
+std::unique_ptr<SoundFile> sfcreate(Thread& th, const char* path, int numChannels, double fileSampleRate, bool interleaved)
 {
-#ifdef SAPF_AUDIOTOOLBOX
-	if (fileSampleRate == 0.)
-		fileSampleRate = th.rate.sampleRate;
-
-	CFStringRef cfpath = CFStringCreateWithFileSystemRepresentation(0, path);
-	if (!cfpath) {
-		post("failed to create path '%s'\n", path);
-		return nullptr;
-	}
-	CFReleaser cfpathReleaser(cfpath);
-	
-	CFURLRef url = CFURLCreateWithFileSystemPath(0, cfpath, kCFURLPOSIXPathStyle, false);
-	if (!url) {
-		post("failed to create url\n");
-		return nullptr;
-	}
-	CFReleaser urlReleaser(url);
-	
-	AudioStreamBasicDescription fileFormat = {
-		fileSampleRate,
-		kAudioFormatLinearPCM,
-		kAudioFormatFlagsNativeFloatPacked,
-		static_cast<UInt32>(sizeof(float) * numChannels),
-		1,
-		static_cast<UInt32>(sizeof(float) * numChannels),
-		static_cast<UInt32>(numChannels),
-		32,
-		0
-	};
-	
-	int interleavedChannels = interleaved ? numChannels : 1;
-	UInt32 interleavedBit = interleaved ? 0 : kAudioFormatFlagIsNonInterleaved;
-	
-	AudioStreamBasicDescription clientFormat = {
-		th.rate.sampleRate,
-		kAudioFormatLinearPCM,
-		kAudioFormatFlagsNativeFloatPacked | interleavedBit,
-		static_cast<UInt32>(sizeof(float) * interleavedChannels),
-		1,
-		static_cast<UInt32>(sizeof(float) * interleavedChannels),
-		static_cast<UInt32>(numChannels),
-		32,
-		0
-	};
-		
-	ExtAudioFileRef xaf;
-	OSStatus err = ExtAudioFileCreateWithURL(url, kAudioFileWAVEType, &fileFormat, nullptr, kAudioFileFlags_EraseFile, &xaf);
-	
-	if (err) {
-		post("failed to create file '%s'. err: %d\n", path, (int)err);
-		return nullptr;
-	}
-	
-	err = ExtAudioFileSetProperty(xaf, kExtAudioFileProperty_ClientDataFormat, sizeof(clientFormat), &clientFormat);
-	if (err) {
-		post("failed to set client data format\n");
-		ExtAudioFileDispose(xaf);
-		return nullptr;
-	}
-	
-	return xaf;
-#else
-	// TODO
-        return (SoundFile) malloc(sizeof(SoundFile));
-#endif // SAPF_AUDIOTOOLBOX
+	return SoundFile::create(path, numChannels, th.rate.sampleRate, fileSampleRate, interleaved);
 }
 
 std::atomic<int32_t> gFileCount = 0;
@@ -487,7 +211,6 @@ void makeRecordingPath(Arg filename, char* path, int len)
 
 void sfwrite(Thread& th, V& v, Arg filename, bool openIt)
 {
-#ifdef SAPF_AUDIOTOOLBOX
 	std::vector<ZIn> in;
 	
 	int numChannels = 0;
@@ -524,17 +247,17 @@ void sfwrite(Thread& th, V& v, Arg filename, bool openIt)
 	char path[1024];
 	
 	makeRecordingPath(filename, path, 1024);
+
 	
-	ExtAudioFileRef xaf = sfcreate(th, path, numChannels, 0., true);
-	if (!xaf) return;
+	std::unique_ptr<SoundFile> soundFile = sfcreate(th, path, numChannels, 0., true);
+	if (!soundFile) return;
 	
 	std::valarray<float> buf(0., numChannels * kBufSize);
-	AudioBufferList abl;
-	abl.mNumberBuffers = 1;
-	abl.mBuffers[0].mNumberChannels = numChannels;
-	abl.mBuffers[0].mData = &buf[0];
-	abl.mBuffers[0].mDataByteSize = kBufSize * sizeof(float);
-	
+	AudioBuffers bufs(1);
+	bufs.setNumChannels(0, numChannels);
+	bufs.setData(0, &buf[0]);
+	bufs.setSize(0, kBufSize * sizeof(float));
+		
 	int64_t framesPulled = 0;
 	int64_t framesWritten = 0;
 	bool done = false;
@@ -549,10 +272,16 @@ void sfwrite(Thread& th, V& v, Arg filename, bool openIt)
 			minn = std::min(n, minn);
 		}
 
-		abl.mBuffers[0].mDataByteSize = minn * sizeof(float);
-		OSStatus err = ExtAudioFileWrite(xaf, minn, &abl);
+		bufs.setSize(0, minn * sizeof(float));
+		// TODO: move into a SoundFile method
+#ifdef SAPF_AUDIOTOOLBOX
+		OSStatus err = ExtAudioFileWrite(soundFile->mXAF, minn, bufs.abl);
+#else
+		// TODO: implement writing - needs sample rate conversion too
+		int err = 666;
+#endif // SAPF_AUDIOTOOLBOX
 		if (err) {
-			post("ExtAudioFileWrite failed %d\n", (int)err);
+			post("file writing failed %d\n", (int)err);
 			break;
 		}
 
@@ -560,15 +289,12 @@ void sfwrite(Thread& th, V& v, Arg filename, bool openIt)
 	}
 	
 	post("wrote file '%s'  %d channels  %g secs\n", path, numChannels, framesWritten * th.rate.invSampleRate);
-	
-	ExtAudioFileDispose(xaf);
+
+	soundFile = nullptr;
 	
 	if (openIt) {
 		char cmd[1100];
 		snprintf(cmd, 1100, "open \"%s\"", path);
 		system(cmd);
 	}
-#else
-	// TODO
-#endif // SAPF_AUDIOTOOLBOX
 }

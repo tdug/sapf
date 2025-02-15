@@ -18,20 +18,29 @@
 #define __taggeddoubles__SoundFiles__
 
 #include "VM.hpp"
+
+#include "AudioToolboxBuffers.hpp"
+#include "PortableBuffers.hpp"
 #ifdef SAPF_AUDIOTOOLBOX
-#include <AudioToolbox/ExtendedAudioFile.h>
-typedef ExtAudioFileRef SoundFile;
+typedef AudioToolboxBuffers AudioBuffers;
 #else
-#include <sndfile.h>
-typedef SNDFILE *SoundFile;
-#endif // SAPF_AUDIOTOOLBOX
+typedef PortableBuffers AudioBuffers;
+#endif
+
+#include "AudioToolboxSoundFile.hpp"
+#include "SndfileSoundFile.hpp"
+#ifdef SAPF_AUDIOTOOLBOX
+typedef AudioToolboxSoundFile SoundFile;
+#else
+typedef SndfileSoundFile SoundFile;
+#endif
 
 const int kMaxSFChannels = 1024;
 const int kBufSize = 1024;
 
 void makeRecordingPath(Arg filename, char* path, int len);
 
-SoundFile sfcreate(Thread& th, const char* path, int numChannels, double fileSampleRate, bool interleaved);
+std::unique_ptr<SoundFile> sfcreate(Thread& th, const char* path, int numChannels, double fileSampleRate, bool interleaved);
 void sfwrite(Thread& th, V& v, Arg filename, bool openIt);
 void sfread(Thread& th, Arg filename, int64_t offset, int64_t frames);
 
