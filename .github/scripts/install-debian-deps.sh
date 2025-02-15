@@ -6,4 +6,5 @@ sudo apt install -y \
   ninja-build \
   libedit-dev \
   libfftw3-dev \
+  libsndfile1-dev \
   librtaudio-dev
