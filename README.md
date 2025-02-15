@@ -19,6 +19,7 @@ and you should get a binary at `./build/sapf`.
 if not using Nix, you will need to install dependencies manually instead of the `nix develop`. the mandatory dependencies for a portable build are currently:
 
 - libedit
+- libsndfile
 - fftw
 - rtaudio
 
